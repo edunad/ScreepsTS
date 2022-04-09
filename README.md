@@ -1,0 +1,2 @@
+# ScreepsTS
+Screeps typescript boilerplate
