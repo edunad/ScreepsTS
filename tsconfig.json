@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "target": "es2018",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "strictNullChecks": false,
+        "declaration": false,
+        "noEmitHelpers": true,
+        "importHelpers": true,
+        "resolveJsonModule": true,
+        "lib": ["es2018"],
+        "baseUrl": "./src/",
+        "outDir": ".bin",
+        "removeComments": true,
+        "paths": { }
+    },
+    "exclude": ["node_modules"]
+}

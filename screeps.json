@@ -1,0 +1,9 @@
+{
+    "email": "<username>",
+    "password": "<password>",
+    "protocol": "http",
+    "hostname": "<ip>",
+    "port": 21025,
+    "path": "/",
+    "branch": "default"
+}
