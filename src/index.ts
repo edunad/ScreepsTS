@@ -1,5 +1,21 @@
 import { catchError } from './utils/ScreepsERR';
 
+import { SpawnController, CreepRole } from './controllers/SpawnController';
+import { TickController } from './controllers/TickController';
+
+
+declare global {
+    interface Memory {
+        uuid: number;
+        // ....
+    }
+
+    interface CreepMemory {
+        role: CreepRole;
+        // ....
+    }
+};
+
 export const loop = catchError(() => {
     // DELETE OLD MEMORIES
     for(let name in Memory.creeps) {
@@ -9,4 +25,7 @@ export const loop = catchError(() => {
         }
     }
     // ---
+
+    SpawnController.run();
+    TickController.run();
 });

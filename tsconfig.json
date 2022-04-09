@@ -7,7 +7,7 @@
         "forceConsistentCasingInFileNames": true,
         "module": "esnext",
         "moduleResolution": "node",
-        "sourceMap": true,
+        "sourceMap": false,
         "strictNullChecks": false,
         "declaration": false,
         "noEmitHelpers": true,
@@ -17,7 +17,9 @@
         "baseUrl": "./src/",
         "outDir": ".bin",
         "removeComments": true,
-        "paths": { }
+        "paths": {
+            "$creeps/*": ["./types/creeps/*"]
+        }
     },
     "exclude": ["node_modules"]
 }
