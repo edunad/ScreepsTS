@@ -1,7 +1,11 @@
-export const catchError = (run: () => void) => {
+export const throwError = (err: string): void => {
+    console.log(`<span style='color:red'>${err}</span>`);
+}
+
+export const catchError = (run: () => any) => {
     try {
-        run();
+        return run();
     } catch (err) {
-        console.log(`<span style='color:red'>${err}</span>`);
+        throwError(err);
     }
 };

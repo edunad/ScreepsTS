@@ -1,1 +1,0 @@
-export type Spawns = 'Spawn1';
