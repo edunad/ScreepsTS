@@ -10,6 +10,7 @@ import { CreepTaskHarvest } from "tasks/CreepTaskHarvest";
 import { CreepTaskBase } from "tasks/CreepTask";
 import { CreepTaskTransfer } from "tasks/CreepTaskTransfer";
 import { getHive } from "index";
+import { CreepChat } from "types/CreepChat";
 
 interface CreepSpawnTemplateReq {
     energy?: number;
@@ -39,20 +40,48 @@ const slaves: CreepSpawnTemplate[] = [
     {name: 'Sploosh', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4000}},
     {name: 'Dio', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4000}},
     {name: 'Fob', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4500}},
+    {name: 'Gathilo', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 5000}},
 ]
 
 const rooms: string[] = ['W6N1'];
 
 export class SpawnController {
+    private y: number = 0;
+
+    private createFlag(room: Room, msg: string){
+        room.visual.text(msg, 0, this.y++, {color: '#FF0000', align: 'left'});
+    }
+
     public checkRespawns(): void {
+        this.y = 1;
+
         rooms.forEach(roomName => {
             const room = Game.rooms[roomName];
+            room.visual.clear();
+
+            this.createFlag(room, 'Creeps');
+
             let didSpawn = false;
+            let lastRole = null;
             slaves.forEach((slave) => {
                 const slaveName = `${slave.name}:${roomName}`;
 
-                if (didSpawn) return;
-                if (Game.creeps[slaveName]) return;
+                if (lastRole !== slave.role) {
+                    this.createFlag(room, `${slave.role}:`);
+                    lastRole = slave.role;
+                }
+
+                if (Game.creeps[slaveName]) {
+                    this.createFlag(room, `- ${slave.name}: ${CreepChat.idle}`);
+                    return;
+                }
+
+                if (didSpawn) {
+                    this.createFlag(room, `- ${slave.name}: ${CreepChat.idle}`);
+                    return;
+                }
+
+                this.createFlag(room, `- ${slave.name}: ${CreepChat.needTask}`);
 
                 if (slave.req) {
                     if (typeof slave.req.energy !== 'undefined') {
@@ -105,5 +134,6 @@ export class SpawnController {
                 }
             });
         });
+
     }
 }
