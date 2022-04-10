@@ -9,9 +9,9 @@ export class PowerPoint {
     maxCreeps: number;
     creeps: {[id: string]: Creep};
 
-    constructor(source: Source) {
+    constructor(source: Source, maxCreeps: number) {
         this.source = source;
-        this.maxCreeps = 2;
+        this.maxCreeps = maxCreeps;
         this.creeps = {};
     }
 
@@ -36,14 +36,33 @@ export class PowerPointsController {
         this.points = {}; // Cleanup
 
         const room = Game.spawns[spawnID].room;
-        Game.map.visual.text("⚡ SCANNING...", new RoomPosition(10, 10, room.name), {color: '#FF0000', fontSize: 10});
+        room.visual.text("⚡ SCANNING...", 1, 1, {color: '#FF0000', align: 'left'});
 
         const sources = room.find(FIND_SOURCES);
         sources.forEach((source: Source) => {
-            this.points[source.id] = new PowerPoint(source);
+            const pos = source.pos;
+            const terrain = room.getTerrain();
+            let maxCreeps = 8;
+
+            // TOP ROW
+            if(terrain.get(pos.x - 1, pos.y - 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+            if(terrain.get(pos.x, pos.y - 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+            if(terrain.get(pos.x + 1, pos.y - 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+
+            // MIDDLE ROW
+            if(terrain.get(pos.x - 1, pos.y) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+            if(terrain.get(pos.x + 1, pos.y) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+
+            // BOTTOM ROW
+            if(terrain.get(pos.x - 1, pos.y + 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+            if(terrain.get(pos.x, pos.y + 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+            if(terrain.get(pos.x + 1, pos.y + 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
+
+            console.log(`Source ${source.id} can support up to ${maxCreeps} creeps!`);
+            if(maxCreeps > 0) this.points[source.id] = new PowerPoint(source, maxCreeps);
         });
 
-        Game.map.visual.text(`⚡ FOUND: ${sources.length}`, new RoomPosition(0, 0, room.name), {color: '#FF0000', fontSize: 10});
+        room.visual.text(`⚡ FOUND: ${sources.length}`, 1, 2, {color: '#FF0000', align: 'left'});
     }
 
     public static get(id: string) : PowerPoint | null {

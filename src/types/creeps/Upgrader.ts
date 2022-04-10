@@ -14,22 +14,8 @@ export class Upgrader extends CakeCreep {
     public memory: UpgraderMemory;
 
     @register('Upgrader')
-    private goTakeAWalk(say: string): void {
-        this.moveTo(42, 26, {visualizePathStyle: {stroke: '#ffaa00'}});
-        this.say(say);
-    }
-
-    @register('Upgrader')
-    private upgradeMode(): void {
-        if(this.upgradeController(this.room.controller) == ERR_NOT_IN_RANGE) {
-            this.moveTo(this.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
-            this.say('🏃‍♀️');
-        }
-    }
-
-    @register('Upgrader')
     private maintenanceMode(): void {
-        if(this.room.controller.ticksToDowngrade > 9000) return;
+        if(this.room.controller.ticksToDowngrade > 9000) return CakeCreep.execute(this, 'goAFK', '⚡?');
         if(this.upgradeController(this.room.controller) == ERR_NOT_IN_RANGE) {
             this.moveTo(this.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
             this.say('🔧');
@@ -42,9 +28,9 @@ export class Upgrader extends CakeCreep {
         const powerStorage = _.filter(structs, (structure) =>
             (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_SPAWN) &&
             ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) != 0) ||
-            (structure.structureType === STRUCTURE_SPAWN && structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 300)));
+            (structure.structureType === STRUCTURE_SPAWN && structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 200)));
 
-        if(!powerStorage.length) return CakeCreep.execute(this, 'goTakeAWalk', '⚡?');
+        if(!powerStorage.length) return CakeCreep.execute(this, 'goAFK', '⚡?');
         if(this.withdraw(powerStorage[0], RESOURCE_ENERGY, this.store.getFreeCapacity()) == ERR_NOT_IN_RANGE) {
             this.moveTo(powerStorage[0], {visualizePathStyle: {stroke: '#ffffff'}});
             this.say('🏃‍♀️');

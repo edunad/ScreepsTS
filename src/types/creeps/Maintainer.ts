@@ -4,25 +4,26 @@ declare var _: LoDashStatic;
 import { CakeCreep } from "types/CakeCreep";
 import { register } from "utils/Register";
 
-export interface BuilderMemory extends CreepMemory {
-    building: boolean;
+export interface MaintainerMemory extends CreepMemory {
+    fixing: boolean;
 }
 
-export class Builder extends CakeCreep {
-    public memory: BuilderMemory;
+export class Maintainer extends CakeCreep {
+    public memory: MaintainerMemory;
 
-    @register('Builder')
-    private buildMode(): void {
-        const targets = this.room.find(FIND_CONSTRUCTION_SITES);
-        if(!targets.length) return CakeCreep.execute(this, 'goAFK', '🏢?');
+    @register('Maintainer')
+    private fixingMode(): void {
+        const structs = this.room.find(FIND_STRUCTURES);
+        const needsRepair = _.filter(structs, (structure) => structure.hits < structure.hitsMax / 4 * 3);
+        if(!needsRepair.length) return CakeCreep.execute(this, 'goAFK', '😿');
 
-        if(this.build(targets[0]) == ERR_NOT_IN_RANGE) {
-            this.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+        if(this.repair(needsRepair[0]) == ERR_NOT_IN_RANGE) {
+            this.moveTo(needsRepair[0], {visualizePathStyle: {stroke: '#ffffff'}});
             this.say('🏃‍♀️');
         }
     }
 
-    @register('Builder')
+    @register('Maintainer')
     private collectMode(): void {
         const structs = this.room.find(FIND_STRUCTURES);
         const powerStorage = _.filter(structs, (structure) =>
@@ -42,17 +43,17 @@ export class Builder extends CakeCreep {
     }
 
     public run() {
-        if(this.memory.building && this.store[RESOURCE_ENERGY] == 0) {
-            this.memory.building = false;
+        if(this.memory.fixing && this.store[RESOURCE_ENERGY] == 0) {
+            this.memory.fixing = false;
             this.say('⚡ harvest');
         }
 
-        if(!this.memory.building && this.store.getFreeCapacity() == 0) {
-            this.memory.building = true;
-            this.say('🚧 build');
+        if(!this.memory.fixing && this.store.getFreeCapacity() == 0) {
+            this.memory.fixing = true;
+            this.say('🔧 fixing');
         }
 
-        if(this.memory.building) CakeCreep.execute(this, 'buildMode');
+        if(this.memory.fixing) CakeCreep.execute(this, 'fixingMode');
         else CakeCreep.execute(this, 'collectMode');
     }
 }

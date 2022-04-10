@@ -7,12 +7,15 @@ import './extensions/NumberExtension';
 
 declare global {
     interface Memory {
-        uuid: number;
         // ....
     }
 
     interface CreepMemory {
         role: CreepRole;
+
+        // Sleep
+        lastDeadTickCheck?: number;
+        lastPos?: RoomPosition;
         // ....\
     }
 
