@@ -1,4 +1,3 @@
-import { catchError } from './utils/ScreepsERR';
 
 import { SpawnController, CreepRole } from './controllers/SpawnController';
 import { TickController } from './controllers/TickController';
@@ -16,8 +15,9 @@ declare global {
     }
 };
 
-export const loop = catchError(() => {
-    // DELETE OLD MEMORIES
+declare var module: any;
+module.exports.loop = () => {
+   // DELETE OLD MEMORIES
     for(let name in Memory.creeps) {
         if(!Game.creeps[name]) {
             delete Memory.creeps[name];
@@ -28,4 +28,4 @@ export const loop = catchError(() => {
 
     SpawnController.run();
     TickController.run();
-});
+};
