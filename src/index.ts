@@ -1,8 +1,9 @@
-import { catchError } from './utils/ScreepsERR';
-
-import { SpawnController, CreepRole } from './controllers/SpawnController';
+import { CreepRole } from './controllers/SpawnController';
 import { TickController } from './controllers/TickController';
 
+import './extensions/MathExtension';
+import './extensions/StringExtension';
+import './extensions/NumberExtension';
 
 declare global {
     interface Memory {
@@ -12,20 +13,15 @@ declare global {
 
     interface CreepMemory {
         role: CreepRole;
-        // ....
+        // ....\
     }
-};
 
-export const loop = catchError(() => {
-    // DELETE OLD MEMORIES
-    for(let name in Memory.creeps) {
-        if(!Game.creeps[name]) {
-            delete Memory.creeps[name];
-            console.log('Clearing non-existing creep memory:', name);
-        }
+    interface PowerCreepMemory {
+        role: CreepRole;
+        // ....\
     }
-    // ---
+}
 
-    SpawnController.run();
-    TickController.run();
-});
+declare var module: any;
+module.exports.loop = () => TickController.run();
+

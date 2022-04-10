@@ -1,10 +1,56 @@
+import { VarsController } from "controllers/VarsController";
+import type { LoDashStatic } from "lodash";
+declare var _: LoDashStatic;
+
+import { CakeCreep } from "types/CakeCreep";
+import { register } from "utils/Register";
 
 export interface UpgraderMemory extends CreepMemory {
     upgrading: boolean;
 }
 
-export class Upgrader extends Creep {
+const UPGRADE_ENABLED: boolean = false;
+export class Upgrader extends CakeCreep {
     public memory: UpgraderMemory;
+
+    @register('Upgrader')
+    private goTakeAWalk(say: string): void {
+        this.moveTo(42, 26, {visualizePathStyle: {stroke: '#ffaa00'}});
+        this.say(say);
+    }
+
+    @register('Upgrader')
+    private upgradeMode(): void {
+        if(this.upgradeController(this.room.controller) == ERR_NOT_IN_RANGE) {
+            this.moveTo(this.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
+            this.say('🏃‍♀️');
+        }
+    }
+
+    @register('Upgrader')
+    private maintenanceMode(): void {
+        if(this.room.controller.ticksToDowngrade > 9000) return;
+        if(this.upgradeController(this.room.controller) == ERR_NOT_IN_RANGE) {
+            this.moveTo(this.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
+            this.say('🔧');
+        }
+    }
+
+    @register('Upgrader')
+    private collectMode(): void {
+        const structs = this.room.find(FIND_STRUCTURES);
+        const powerStorage = _.filter(structs, (structure) =>
+            (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_SPAWN) &&
+            ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) != 0) ||
+            (structure.structureType === STRUCTURE_SPAWN && structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 300)));
+
+        if(!powerStorage.length) return CakeCreep.execute(this, 'goTakeAWalk', '⚡?');
+        if(this.withdraw(powerStorage[0], RESOURCE_ENERGY, this.store.getFreeCapacity()) == ERR_NOT_IN_RANGE) {
+            this.moveTo(powerStorage[0], {visualizePathStyle: {stroke: '#ffffff'}});
+            this.say('🏃‍♀️');
+        }
+    }
+
 
     public run() {
         if(this.memory.upgrading && this.store[RESOURCE_ENERGY] <= 0) {
@@ -17,20 +63,10 @@ export class Upgrader extends Creep {
             this.say('⚡ upgrading');
         }
 
-
         if(this.memory.upgrading) {
-            if(this.room.controller.ticksToDowngrade <= 9000) {
-                if(this.upgradeController(this.room.controller) == ERR_NOT_IN_RANGE) {
-                    this.moveTo(this.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-            } else {
-                this.moveTo(46, 19, {visualizePathStyle: {stroke: '#ff0000'}});
-            }
-        } else {
-            const sources = this.room.find(FIND_SOURCES);
-            if(this.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                this.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffffff'}});
-            }
+            if(!VarsController.isSet('UPGRADE_ENABLED')) return CakeCreep.execute(this, 'maintenanceMode');
+            return CakeCreep.execute(this, 'upgradeMode');
         }
+        else return CakeCreep.execute(this, 'collectMode');
     }
 }

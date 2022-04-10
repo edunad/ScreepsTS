@@ -18,7 +18,8 @@ export default {
   output: {
     file: ".bin/main.js",
     format: "cjs",
-    sourcemap: true
+
+    sourcemap: false,
   },
 
   plugins: [
