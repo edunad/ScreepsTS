@@ -14,8 +14,7 @@ declare global {
         role: CreepRole;
 
         // Sleep
-        lastDeadTickCheck?: number;
-        lastPos?: RoomPosition;
+        sleepTick?: number;
         // ....\
     }
 

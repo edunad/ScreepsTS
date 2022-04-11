@@ -9,18 +9,13 @@ export abstract class CakeCreep extends Creep {
 
     @register('GLOBAL')
     private goAFK(say: string = '😿'): void {
-        if(this.memory.lastDeadTickCheck) return;
+        if(this.memory.sleepTick) return;
         const afkPos = SettingsController.get(this.room.name, 'AFK_POS', {x: 3, y: 3});
 
-        this.memory.lastPos = this.pos;
         this.moveTo(afkPos.x, afkPos.y, {visualizePathStyle: {stroke: '#ffaa00'}});
+        this.say(say);
 
-        if(this.memory.lastPos.x === this.pos.x && this.memory.lastPos.y === this.pos.y) {
-            this.say('💤');
-            this.memory.lastDeadTickCheck = 4;
-        } else {
-            this.say(say);
-        }
+        this.memory.sleepTick = 4;
     }
 
     public static execute(creep: any, id: string, ...values: any): any {

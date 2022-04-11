@@ -16,6 +16,8 @@ export class Builder extends CakeCreep {
         const targets = this.room.find(FIND_CONSTRUCTION_SITES);
         if(!targets.length) return CakeCreep.execute(this, 'goAFK', '🏢?');
 
+        targets.sort((structure) => structure.structureType === STRUCTURE_EXTENSION ? -1 : 0);
+
         if(this.build(targets[0]) == ERR_NOT_IN_RANGE) {
             this.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
             this.say('🏃‍♀️');
@@ -27,7 +29,7 @@ export class Builder extends CakeCreep {
         const structs = this.room.find(FIND_STRUCTURES);
         const powerStorage = _.filter(structs, (structure) =>
             (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_SPAWN) &&
-            ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) != 0) ||
+            ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) > this.store.getFreeCapacity()) ||
             (structure.structureType === STRUCTURE_SPAWN && structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 200)));
 
         if(!powerStorage.length) return CakeCreep.execute(this, 'goAFK', '⚡?');

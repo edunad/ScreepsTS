@@ -27,7 +27,7 @@ export class Upgrader extends CakeCreep {
         const structs = this.room.find(FIND_STRUCTURES);
         const powerStorage = _.filter(structs, (structure) =>
             (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_SPAWN) &&
-            ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) != 0) ||
+            ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) > this.store.getFreeCapacity()) ||
             (structure.structureType === STRUCTURE_SPAWN && structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 200)));
 
         if(!powerStorage.length) return CakeCreep.execute(this, 'goAFK', '⚡?');

@@ -14,7 +14,7 @@ export class Maintainer extends CakeCreep {
     @register('Maintainer')
     private fixingMode(): void {
         const structs = this.room.find(FIND_STRUCTURES);
-        const needsRepair = _.filter(structs, (structure) => structure.hits < structure.hitsMax / 4 * 3);
+        const needsRepair = _.filter(structs, (structure) => structure.hits < structure.hitsMax / 1.1);
         if(!needsRepair.length) return CakeCreep.execute(this, 'goAFK', '😿');
 
         if(this.repair(needsRepair[0]) == ERR_NOT_IN_RANGE) {
@@ -25,15 +25,14 @@ export class Maintainer extends CakeCreep {
 
     @register('Maintainer')
     private collectMode(): void {
-        const structs = this.room.find(FIND_STRUCTURES);
-        const powerStorage = _.filter(structs, (structure) =>
+        const structs = this.room.find(FIND_STRUCTURES, {filter: (structure) =>
             (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_SPAWN) &&
-            ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) != 0) ||
-            (structure.structureType === STRUCTURE_SPAWN && structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 200)));
+            ((structure.structureType === STRUCTURE_CONTAINER && structure.store.getUsedCapacity(RESOURCE_ENERGY) > this.store.getFreeCapacity()) ||
+            (structure.structureType === STRUCTURE_SPAWN && structure.store.getUsedCapacity(RESOURCE_ENERGY) >= 200))});
 
-        if(!powerStorage.length) return CakeCreep.execute(this, 'goAFK', '⚡?');
-        if(this.withdraw(powerStorage[0], RESOURCE_ENERGY, this.store.getFreeCapacity()) == ERR_NOT_IN_RANGE) {
-            this.moveTo(powerStorage[0], {visualizePathStyle: {stroke: '#ffffff'}});
+        if(!structs.length) return CakeCreep.execute(this, 'goAFK', '⚡?');
+        if(this.withdraw(structs[0], RESOURCE_ENERGY, this.store.getFreeCapacity()) == ERR_NOT_IN_RANGE) {
+            this.moveTo(structs[0], {visualizePathStyle: {stroke: '#ffffff'}});
             this.say('🏃‍♀️');
         }
     }

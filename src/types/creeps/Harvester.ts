@@ -24,7 +24,7 @@ export class Harvester extends CakeCreep {
     private registerHarvester(say: string): boolean {
         if(this.memory.sourceID) return true;
 
-        const source = PowerPointsController.getAvaliableSource();
+        const source = PowerPointsController.getClosestAvaliableSource(this.pos);
         if(!source) return false;
 
         this.memory.sourceID = source.source.id;
@@ -41,10 +41,13 @@ export class Harvester extends CakeCreep {
 
         const targets = this.room.find(FIND_STRUCTURES, {
             filter: (structure) => {
-                return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN || structure.structureType == STRUCTURE_CONTAINER) &&
+                return (structure.structureType === STRUCTURE_EXTENSION || structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_CONTAINER) &&
                     structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
             }
         });
+
+        // Prioritize spawn
+        targets.sort((structure) => structure.structureType === STRUCTURE_SPAWN ? -1 : structure.structureType === STRUCTURE_EXTENSION ? -1 : 0);
 
         if(!targets) return CakeCreep.execute(this, 'goAFK', '🔋?');
         if(this.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
