@@ -14,3 +14,5 @@ node_modules
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+
+screeps.json
