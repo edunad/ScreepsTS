@@ -21,6 +21,14 @@ export class CreepTaskHarvest extends CreepTaskBase {
             return true;
         }
 
+        if (creep.obj.store.getFreeCapacity() == 0) {
+            creep.obj.say(CreepChat.done);
+            return true;
+        }
+
+        const dropped = target.room.find(FIND_DROPPED_RESOURCES, {filter: (d) => {return (d.resourceType == RESOURCE_ENERGY && d.pos.isEqualTo(creep.obj.pos))}});
+        if (dropped.length > 0) dropped.forEach((d) => creep.obj.pickup(d));
+
         const did = catchError(() => creep.obj.harvest(target));
         if (typeof did === 'undefined') {
             creep.obj.say(CreepChat.error);
@@ -44,7 +52,7 @@ export class CreepTaskHarvest extends CreepTaskBase {
         }
 
         creep.obj.say(CreepChat.busy);
-        return creep.obj.store.getFreeCapacity() == 0;
+        return false;
     }
 
     public onStart(creep: CreepBase) {

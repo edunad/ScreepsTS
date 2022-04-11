@@ -13,8 +13,13 @@ export class CreepHarvester extends CreepBase {
 
     private findEnergySource(): void {
         var sources = this.obj.room.find(FIND_SOURCES);
-        sources = _.sortBy(sources, s => this.obj.pos.getRangeTo(s))
+        const mem: any = this.obj.memory;
+        if (typeof mem.sourceIndex !== 'undefined') {
+            this.setTask(new CreepTaskHarvest(sources[mem.sourceIndex]));
+            return;
+        }
 
+        sources = _.sortBy(sources, s => this.obj.pos.getRangeTo(s))
         for(var id in sources) {
             var source = sources[id];
             if (SourceController.isBusy(source)) {

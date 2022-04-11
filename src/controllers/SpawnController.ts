@@ -17,21 +17,39 @@ interface CreepSpawnTemplateReq {
     level?: number;
     enemies?: number;
     sources?: number;
+    extentions?: number;
+    spawnerEnergy?: number;
 }
 interface CreepSpawnTemplate {
     name: string;
     role: CreepRole;
     body: BodyPartConstant[];
     req?: CreepSpawnTemplateReq;
+    mem?: any;
 }
+
+const slaveBonuses: CreepSpawnTemplate[] = [];
+slaveBonuses[CreepRole.Harvester] = [{
+    req: {
+        extentions: 5,
+    },
+    body: [WORK, WORK],
+}];
 
 const slaves: CreepSpawnTemplate[] = [
     {name: 'Karen', role: CreepRole.Karen, body: [WORK, CARRY, MOVE]},
-    {name: 'Mina', role: CreepRole.FighterMelee, body: [ATTACK, ATTACK, TOUGH, MOVE], req: {enemies: 1}},
-    {name: 'Gumball', role: CreepRole.FighterRanged, body: [RANGED_ATTACK, MOVE], req: {enemies: 1}},
+    {name: 'Koren', role: CreepRole.Karen, body: [WORK, CARRY, MOVE], req: {energy: 4500}},
 
-    {name: 'Bob', role: CreepRole.Harvester, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2}},
-    {name: 'Rob', role: CreepRole.Harvester, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2, sources: 2}},
+    {name: 'Mina', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 1}},
+    {name: 'Gumball', role: CreepRole.FighterRanged, body: [RANGED_ATTACK, RANGED_ATTACK, MOVE], req: {enemies: 1}},
+    {name: 'Aiko', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 1}},
+    {name: 'Feye', role: CreepRole.FighterRanged, body: [RANGED_ATTACK, RANGED_ATTACK, MOVE], req: {enemies: 2}},
+    {name: 'Kubus', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 2}},
+    {name: 'Bobbie', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 2}},
+    {name: 'Bobby', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 2}},
+
+    {name: 'Bob', role: CreepRole.Harvester, mem: {sourceIndex: 0}, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2}},
+    {name: 'Rob', role: CreepRole.Harvester, mem: {sourceIndex: 1}, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2, sources: 2}},
 
     {name: 'Harry', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {level: 2}},
     {name: 'Brom', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 1000}},
@@ -41,6 +59,7 @@ const slaves: CreepSpawnTemplate[] = [
     {name: 'Dio', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4000}},
     {name: 'Fob', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4500}},
     {name: 'Gathilo', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 5000}},
+    {name: 'Kate', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 6000}},
 ]
 
 const rooms: string[] = ['W6N1'];
@@ -49,7 +68,69 @@ export class SpawnController {
     private y: number = 0;
 
     private createFlag(room: Room, msg: string){
-        room.visual.text(msg, 0, this.y++, {color: '#FF0000', align: 'left'});
+        //room.visual.text(msg, 0, this.y++, {color: '#FF0000', align: 'left'});
+    }
+
+    private checkReq(req: CreepSpawnTemplateReq, room: Room, roomDetails: CreepSpawnTemplateReq): boolean {
+        if (typeof req.energy !== 'undefined' && roomDetails.energy < req.energy) return false;
+        if (typeof req.sources !== 'undefined' && roomDetails.sources < req.sources) return false;
+        if (typeof req.level !== 'undefined' && req.level > roomDetails.level) return false;
+        if (typeof req.enemies !== 'undefined' && req.enemies > roomDetails.enemies) return false;
+        if (typeof req.extentions !== 'undefined' && req.extentions > roomDetails.extentions) return false;
+
+        return true;
+    }
+
+    private getRoomReqs(room: Room): CreepSpawnTemplateReq {
+        const targets = room.find(FIND_STRUCTURES);
+        var energy = 0;
+        for(var id in targets) {
+            const target = targets[id];
+            if (target.structureType !== STRUCTURE_CONTAINER && target.structureType !== STRUCTURE_STORAGE) continue;
+
+            energy += target.store.getUsedCapacity(RESOURCE_ENERGY);
+        }
+
+        let availSpawner = 0;
+        const exts = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_EXTENSION);
+        exts.forEach((e) => {
+            if (!(e instanceof StructureExtension)) return;
+            availSpawner += e.store.getUsedCapacity(RESOURCE_ENERGY);
+        });
+
+        return  {
+            sources: room.find(FIND_SOURCES).length,
+            enemies: room.find(FIND_HOSTILE_CREEPS).length + room.find(FIND_HOSTILE_STRUCTURES).length,
+            extentions: exts.length,
+            energy: energy,
+            level: room.controller.level,
+            spawnerEnergy: availSpawner,
+        };
+    }
+
+    private costMapping: {[id: string]: number} = {
+        work: 100,
+        move: 50,
+        tough: 10,
+        carry: 50,
+        attack: 80,
+        ranged_attack: 150,
+        heal: 250,
+        claim: 600,
+    };
+
+    private getBuildCost(body: BodyPartConstant[]): number {
+        let cost = 0;
+        body.forEach((b) => {
+            if (!this.costMapping[b]) {
+                throwError(`Unknown body part '${b}'`);
+                return;
+            }
+
+            cost += this.costMapping[b];
+        });
+
+        return cost;
     }
 
     public checkRespawns(): void {
@@ -57,8 +138,9 @@ export class SpawnController {
 
         rooms.forEach(roomName => {
             const room = Game.rooms[roomName];
-            room.visual.clear();
+            const roomReq = this.getRoomReqs(room);
 
+            //room.visual.clear();
             this.createFlag(room, 'Creeps');
 
             let didSpawn = false;
@@ -83,49 +165,39 @@ export class SpawnController {
 
                 this.createFlag(room, `- ${slave.name}: ${CreepChat.needTask}`);
 
-                if (slave.req) {
-                    if (typeof slave.req.energy !== 'undefined') {
-                        const targets = room.find(FIND_STRUCTURES);
-                        var energy = 0;
-                        for(var id in targets) {
-                            const target = targets[id];
-                            if (target.structureType !== STRUCTURE_CONTAINER) continue;
-
-                            energy += target.store.getUsedCapacity(RESOURCE_ENERGY);
+                if (slave.req && !this.checkReq(slave.req, room, roomReq)) return;
+                let bodyParts = slave.body;
+                if (slaveBonuses[slave.role]) {
+                    slaveBonuses[slave.role].forEach((x: CreepSpawnTemplate) => {
+                        if (this.checkReq(x.req, room, roomReq)) {
+                            bodyParts = bodyParts.concat(x.body);
                         }
-
-
-                        if (energy < slave.req.energy) return;
-                    }
-
-                    if (typeof slave.req.sources !== 'undefined' && room.find(FIND_SOURCES).length < slave.req.sources) {
-                        return;
-                    }
-
-                    if (typeof slave.req.level !== 'undefined' && slave.req.level > room.controller.level) {
-                        return;
-                    }
-
-                    if (typeof slave.req.enemies !== 'undefined' && slave.req.enemies >
-                        (
-                            room.find(FIND_HOSTILE_CREEPS).length +
-                            room.find(FIND_HOSTILE_STRUCTURES).length
-                        )) {
-                        return;
-                    }
+                    });
                 }
 
                 didSpawn = true;
                 const spawns = room.find(FIND_MY_SPAWNS);
                 if (spawns.length == 0) return;
 
-                const code = spawns[0].spawnCreep(slave.body, slaveName);
+                const costNeeded = this.getBuildCost(bodyParts);
+                if (costNeeded > roomReq.spawnerEnergy) {
+                    console.log(`Waiting to spawn ${slave.name}:${costNeeded}, got ${roomReq.spawnerEnergy}`);
+                    return;
+                }
+
+                const code = spawns[0].spawnCreep(bodyParts, slaveName);
                 switch(code) {
                     case OK:
                         const c = Game.creeps[slaveName];
                         c.memory.role = slave.role;
 
-                        console.log(`Added ${slave.name}:${slave.role}`);
+                        if (slave.mem) {
+                            for (let key in slave.mem) {
+                                c.memory[key] = slave.mem[key];
+                            }
+                        }
+
+                        console.log(`Added ${slave.name}:${slave.role}: ${bodyParts}, cost ${costNeeded}`);
                         break;
 
                     default:

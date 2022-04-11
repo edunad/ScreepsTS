@@ -30,17 +30,18 @@ export class CreepKaren extends CreepBuilder {
 
         var targets = this.obj.room.find(FIND_STRUCTURES);
         targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s))
+        const space = this.obj.store.getFreeCapacity(RESOURCE_ENERGY);
 
         whitelist.forEach((type) => {
             if (this.getTask()) return;
-
+            
             for(var id in targets) {
                 const target: any = targets[id];
                 if (target.structureType !== type) continue;
                 if (!target.store) continue;
-                if (target.store.getUsedCapacity(RESOURCE_ENERGY) == 0) continue;
+                if (target.store.getUsedCapacity(RESOURCE_ENERGY) < space) continue;
 
-                this.setTask(new CreepTaskWithdraw(target, this.obj.store.getFreeCapacity(RESOURCE_ENERGY)));
+                this.setTask(new CreepTaskWithdraw(target, space));
                 break;
             }
         });

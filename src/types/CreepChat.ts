@@ -8,5 +8,6 @@ export enum CreepChat {
     needPower = '⚡❓',
     needResource = '⚒️❓',
     needTask = '❓',
-    error = '💀'
+    error = '💀',
+    sadface = '😿',
 }

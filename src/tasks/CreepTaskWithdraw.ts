@@ -24,19 +24,19 @@ export class CreepTaskWithdraw extends CreepTaskBase {
 
         const targetEnergy = target.store.getUsedCapacity(RESOURCE_ENERGY);
         if (typeof this.amount !== 'undefined' && targetEnergy < this.amount) {
-            creep.obj.say(CreepChat.error + 'W1');
+            creep.obj.say(CreepChat.sadface);
             return true;
         }
 
         const did = catchError(() => creep.obj.withdraw(target, RESOURCE_ENERGY, Math.min(creep.obj.store.getFreeCapacity(RESOURCE_ENERGY), targetEnergy)));
         if (typeof did === 'undefined') {
-            creep.obj.say(CreepChat.error + 'W2');
+            creep.obj.say(CreepChat.error + 'W1');
             return true;
         }
 
         if (did !== OK) {
             if(did == ERR_INVALID_TARGET) {
-                creep.obj.say(CreepChat.error + 'W3');
+                creep.obj.say(CreepChat.sadface);
                 return true;
             }
 
