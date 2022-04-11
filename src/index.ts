@@ -1,8 +1,7 @@
+import type { LoDashStatic } from "lodash";
+declare var _: LoDashStatic;
 
-import { SpawnController, CreepRole } from './controllers/SpawnController';
-import { TickController } from './controllers/TickController';
-
-
+// Extend screeps interfaces
 declare global {
     interface Memory {
         uuid: number;
@@ -10,11 +9,12 @@ declare global {
     }
 
     interface CreepMemory {
-        role: CreepRole;
+        role: 'Harvester' | 'Upgrader' | 'Builder';
         // ....
     }
 };
 
+// Main loop
 declare var module: any;
 module.exports.loop = () => {
    // DELETE OLD MEMORIES
@@ -25,7 +25,4 @@ module.exports.loop = () => {
         }
     }
     // ---
-
-    SpawnController.run();
-    TickController.run();
 };
