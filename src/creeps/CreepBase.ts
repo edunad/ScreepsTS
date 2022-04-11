@@ -58,20 +58,29 @@ export class CreepBase {
     }
 
     public onTick() {
-        if (!this.getTask()) {
-            this.onGetNextTask();
-            if (!this.getTask()) {
-                this.obj.say(CreepChat.needTask);
-                this.wander();
-                return;
-            }
-        }
+        let limit = 5;
+        let doWork = false;
+        do {
+            if (limit-- == 0) break;
+            doWork = false;
 
-        const t = this.getTask();
-        if (t.onTick(this)) {
-            this.setTask(null);
-            this.onTaskCompleted();
-        }
+            if (!this.getTask()) {
+                this.onGetNextTask();
+                if (!this.getTask()) {
+                    this.obj.say(CreepChat.needTask, true);
+                    this.wander();
+                    return;
+                }
+            }
+
+            const t = this.getTask();
+            if (t.onTick(this)) {
+                this.setTask(null);
+                this.onTaskCompleted();
+
+                doWork = true;
+            }
+        } while(doWork)
     }
 
     public wander(): void {

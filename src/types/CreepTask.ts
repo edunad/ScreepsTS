@@ -6,6 +6,8 @@ export enum CreepTask {
     Build = 'build',
     Repair = 'repair',
     Idle = 'Idle',
+    Move = 'move',
+    Sleep = 'sleep',
     AttackMelee = 'attackMelee',
     AttackRanged = 'attackRanged',
 }

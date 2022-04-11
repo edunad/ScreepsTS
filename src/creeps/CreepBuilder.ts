@@ -55,9 +55,14 @@ export class CreepBuilder extends CreepBase {
 
     private checkNeedsToBuild(): boolean {
         var targets: any = this.obj.room.find(FIND_CONSTRUCTION_SITES);
+
+        // TEMP FILTER
+        var fileredtargets = targets.filter((t) => t.structureType != STRUCTURE_RAMPART);
+        if (fileredtargets.length > 0) targets = fileredtargets;
+
         if (targets.length == 0) return false;
 
-        targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s));
+        targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s) - (s.progress / s.progressTotal * 20));
         this.setTask(new CreepTaskBuild(targets[0]));
         return true;
     };
@@ -95,6 +100,6 @@ export class CreepBuilder extends CreepBase {
         if (this.checkNeedsToBuild()) return;
         if (this.checkNeedsToUpgrade()) return;
 
-        this.obj.say(CreepChat.needTask);
+        this.obj.say(CreepChat.needTask, true);
     }
 }

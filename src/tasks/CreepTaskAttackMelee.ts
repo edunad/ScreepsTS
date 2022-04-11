@@ -2,11 +2,13 @@ import { CreepBase } from "creeps/CreepBase";
 import { CreepChat } from "types/CreepChat";
 import { CreepTask } from "types/CreepTask";
 import { catchError } from "utils/ScreepsERR";
+import { Traveler } from "utils/Traveler";
+import { TravelToOptions } from "utils/TravelerInterfaces";
 import { CreepTaskBase } from "./CreepTask";
 
 export class CreepTaskAttackMelee extends CreepTaskBase {
     private target: string;
-    private movePathVisual = {visualizePathStyle: {stroke: '#FF0000', opacity:.5}};
+    private travelOptions: TravelToOptions = {style: {color: '#FF0000', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
 
     constructor(target?: Structure|Creep) {
         super();
@@ -16,25 +18,30 @@ export class CreepTaskAttackMelee extends CreepTaskBase {
     public onTick(creep: CreepBase): boolean {
         const target: any = Game.getObjectById(this.target);
         if (!target) {
-            creep.obj.say(CreepChat.error);
+            creep.obj.say(CreepChat.error, true);
             return true;
         }
 
         const did = catchError(() => creep.obj.attack(target));
         if (typeof did === 'undefined') {
-            creep.obj.say(CreepChat.error);
+            creep.obj.say(CreepChat.error, true);
             return true;
         }
 
         if (did !== OK) {
+            if(did == ERR_NO_BODYPART) {
+                creep.obj.say(CreepChat.error, true);
+                return true;
+            }
+
             if(did == ERR_INVALID_TARGET) {
-                creep.obj.say(CreepChat.error);
+                creep.obj.say(CreepChat.error, true);
                 return true;
             }
 
             if(did == ERR_NOT_IN_RANGE) {
-                creep.obj.moveTo(target, this.movePathVisual);
-                creep.obj.say(CreepChat.moving);
+                const moveret = Traveler.travelTo(creep.obj, target, this.travelOptions);
+                creep.obj.say(moveret == OK ? CreepChat.moving : CreepChat.tired);
                 return false;
             }
 
@@ -42,7 +49,7 @@ export class CreepTaskAttackMelee extends CreepTaskBase {
             return false;
         }
 
-        creep.obj.say(CreepChat.fightingMelee);
+        creep.obj.say(CreepChat.fightingMelee, true);
         return false;
     }
 

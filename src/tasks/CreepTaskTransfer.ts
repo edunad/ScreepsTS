@@ -1,13 +1,16 @@
 import { SourceController } from "controllers/SourceController";
 import { CreepBase } from "creeps/CreepBase";
+import { TransformStream } from "stream/web";
 import { CreepChat } from "types/CreepChat";
 import { CreepTask } from "types/CreepTask";
 import { catchError, throwError } from "utils/ScreepsERR";
+import { Traveler } from "utils/Traveler";
+import { TravelToOptions } from "utils/TravelerInterfaces";
 import { CreepTaskBase } from "./CreepTask";
 
 export class CreepTaskTransfer extends CreepTaskBase {
     private target: string;
-    private movePathVisual = {visualizePathStyle: {stroke: '#0000AA', opacity:.5}};
+    private travelOptions: TravelToOptions = {style: {color: '#0000AA', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
 
     constructor(struct?: Structure) {
         super();
@@ -17,7 +20,7 @@ export class CreepTaskTransfer extends CreepTaskBase {
     public onTick(creep: CreepBase): boolean {
         const target: any = Game.getObjectById(this.target);
         if (!target) {
-            creep.obj.say(CreepChat.error);
+            creep.obj.say(CreepChat.error, true);
             return true;
         }
 
@@ -28,24 +31,24 @@ export class CreepTaskTransfer extends CreepTaskBase {
         
         const did = catchError(() => creep.obj.transfer(target, RESOURCE_ENERGY, amount));
         if (typeof did === 'undefined') {
-            creep.obj.say(CreepChat.error);
+            creep.obj.say(CreepChat.error, true);
             return true;
         }
 
         if (did !== OK) {
             if(did == ERR_INVALID_TARGET) {
-                creep.obj.say(CreepChat.error);
+                creep.obj.say(CreepChat.error, true);
                 return true;
             }
 
             if(did == ERR_NOT_IN_RANGE) {
-                creep.obj.moveTo(target, this.movePathVisual);
-                creep.obj.say(CreepChat.moving);
+                const moveret = Traveler.travelTo(creep.obj, target, this.travelOptions);
+                creep.obj.say(moveret == OK ? CreepChat.moving : CreepChat.tired, true);
                 return false;
             }
 
             if(did == ERR_FULL || did == ERR_NOT_ENOUGH_RESOURCES) {
-                creep.obj.say(CreepChat.done);
+                creep.obj.say(CreepChat.done, true);
                 return true;
             }
 
@@ -54,11 +57,11 @@ export class CreepTaskTransfer extends CreepTaskBase {
         }
 
         if (creep.obj.store.getUsedCapacity(RESOURCE_ENERGY) == 0) {
-            creep.obj.say(CreepChat.done);
+            creep.obj.say(CreepChat.done, true);
             return true;
         }
 
-        creep.obj.say(CreepChat.busy);
+        creep.obj.say(CreepChat.busy, true);
         return false;
     }
 

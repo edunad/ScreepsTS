@@ -3,11 +3,13 @@ import { CreepBase } from "creeps/CreepBase";
 import { CreepChat } from "types/CreepChat";
 import { CreepTask } from "types/CreepTask";
 import { catchError } from "utils/ScreepsERR";
+import { Traveler } from "utils/Traveler";
+import { TravelToOptions } from "utils/TravelerInterfaces";
 import { CreepTaskBase } from "./CreepTask";
 
 export class CreepTaskHarvest extends CreepTaskBase {
     private target: string;
-    private movePathVisual = {visualizePathStyle: {stroke: '#AA0000', opacity:.5}};
+    private travelOptions: TravelToOptions = {style: {color: '#AA0000', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
 
     constructor(source?: Source) {
         super();
@@ -17,12 +19,12 @@ export class CreepTaskHarvest extends CreepTaskBase {
     public onTick(creep: CreepBase): boolean {
         const target: Source = Game.getObjectById(this.target);
         if (!target) {
-            creep.obj.say(CreepChat.error);
+            creep.obj.say(CreepChat.error, true);
             return true;
         }
 
         if (creep.obj.store.getFreeCapacity() == 0) {
-            creep.obj.say(CreepChat.done);
+            creep.obj.say(CreepChat.done, true);
             return true;
         }
 
@@ -31,19 +33,19 @@ export class CreepTaskHarvest extends CreepTaskBase {
 
         const did = catchError(() => creep.obj.harvest(target));
         if (typeof did === 'undefined') {
-            creep.obj.say(CreepChat.error);
+            creep.obj.say(CreepChat.error, true);
             return true;
         }
 
         if (did !== OK) {
             if(did == ERR_INVALID_TARGET) {
-                creep.obj.say(CreepChat.error);
+                creep.obj.say(CreepChat.error, true);
                 return true;
             }
 
             if(did == ERR_NOT_IN_RANGE) {
-                creep.obj.moveTo(target, this.movePathVisual);
-                creep.obj.say(CreepChat.moving);
+                const moveret = Traveler.travelTo(creep.obj, target, this.travelOptions);
+                creep.obj.say(moveret == OK ? CreepChat.moving : CreepChat.tired);
                 return false;
             }
 
@@ -51,7 +53,7 @@ export class CreepTaskHarvest extends CreepTaskBase {
             return false;
         }
 
-        creep.obj.say(CreepChat.busy);
+        creep.obj.say(CreepChat.busy, true);
         return false;
     }
 

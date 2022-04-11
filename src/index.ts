@@ -12,3 +12,5 @@ declare var module: any;
 module.exports.loop = () => {
     hive.tick();
 }
+
+global.getHive = getHive;

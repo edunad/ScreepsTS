@@ -34,7 +34,7 @@ export class CreepKaren extends CreepBuilder {
 
         whitelist.forEach((type) => {
             if (this.getTask()) return;
-            
+
             for(var id in targets) {
                 const target: any = targets[id];
                 if (target.structureType !== type) continue;
@@ -68,7 +68,6 @@ export class CreepKaren extends CreepBuilder {
                 if (target.structureType !== type) continue;
                 if (!target.store) continue;
                 if (target.store.getFreeCapacity(RESOURCE_ENERGY) == 0) continue;
-                if (target.structureType == STRUCTURE_SPAWN && target.store.getFreeCapacity(RESOURCE_ENERGY) < 75) continue;
 
                 endTarget = target;
                 this.setTask(new CreepTaskTransfer(target));

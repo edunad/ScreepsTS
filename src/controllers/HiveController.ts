@@ -20,6 +20,9 @@ import { CreepFighterMelee } from "creeps/CreepFighterMelee";
 import { CreepTaskAttackMelee } from "tasks/CreepTaskAttackMelee";
 import { CreepFighterRanged } from "creeps/CreepFighterRanged";
 import { CreepTaskAttackRanged } from "tasks/CreepTaskAttackRanged";
+import { CreepAdventurer } from "creeps/CreepAdventurer";
+import { CreepTaskMove } from "tasks/CreepTaskMove";
+import { CreepTaskSleep } from "tasks/CreepTaskSleep";
 
 export class HiveController {
     public creeps: CreepBase[] = [];
@@ -72,6 +75,31 @@ export class HiveController {
         catchError(() => {
             this.spawner.checkRespawns();
         });
+
+        for (let roomName in Game.rooms) {
+            const room = Game.rooms[roomName];
+            const structs = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType == STRUCTURE_TOWER);
+            if (structs.length == 0) continue;
+
+            const enemies = room.find(FIND_HOSTILE_CREEPS);
+            const allies = room.find(FIND_MY_CREEPS).filter((c) => c.hits < c.hitsMax);
+
+            structs.forEach((s) => {
+                if (!(s instanceof StructureTower)) return;
+
+                if (enemies.length == 0) {
+                    if (allies.length > 0) {
+                        const closest = _.sortBy(allies, s => s.pos.getRangeTo(s));
+                        s.heal(closest[0]);
+                    }
+
+                    return;
+                }
+
+                const closest = _.sortBy(enemies, s => s.pos.getRangeTo(s));
+                s.attack(closest[0]);
+            });
+        }
     }
 
     public registerCreep(creep: Creep): void {
@@ -82,10 +110,11 @@ export class HiveController {
             case CreepRole.Karen: wrapper = new CreepKaren(creep); break;
             case CreepRole.FighterMelee: wrapper = new CreepFighterMelee(creep); break;
             case CreepRole.FighterRanged: wrapper = new CreepFighterRanged(creep); break;
+            case CreepRole.Adventurer: wrapper = new CreepAdventurer(creep); break;
         }
 
         if (!wrapper) {
-            creep.say(CreepChat.error);
+            creep.say(CreepChat.error, true);
             throwError(`${creep.name}:${creep.memory.role} has no role :(`);
             return;
         }
@@ -101,6 +130,8 @@ export class HiveController {
                 case CreepTask.Idle: task = new CreepTaskIdle(); break;
                 case CreepTask.AttackMelee: task = new CreepTaskAttackMelee(); break;
                 case CreepTask.AttackRanged: task = new CreepTaskAttackRanged(); break;
+                case CreepTask.Move: task = new CreepTaskMove(); break;
+                case CreepTask.Sleep: task = new CreepTaskSleep(); break;
             }
 
             if (task) {
@@ -125,5 +156,33 @@ export class HiveController {
         for(const name in Game.creeps) {
             this.registerCreep(Game.creeps[name]);
         }
+    }
+
+    public cancelTask(creepName: string) {
+        let found = false;
+        this.creeps.forEach((c) => {
+            if (c.name.startsWith(creepName)) {
+                c.setTask(null);
+                console.log('Done: ' + c.name);
+
+                found = true;
+            }
+        })
+
+        if (!found) console.log('failed :(');
+    }
+
+    public cancelTaskByRole(role: string) {
+        let found = false;
+        this.creeps.forEach((c) => {
+            if (c.obj.memory.role.toLowerCase() == role.toLowerCase()) {
+                c.setTask(null);
+                console.log('Done: ' + c.name);
+
+                found = true;
+            }
+        })
+
+        if (!found) console.log('failed :(');
     }
 }

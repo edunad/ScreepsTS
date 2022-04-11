@@ -10,4 +10,5 @@ export enum CreepChat {
     needTask = '❓',
     error = '💀',
     sadface = '😿',
+    tired = '😰',
 }

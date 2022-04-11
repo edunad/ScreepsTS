@@ -4,5 +4,6 @@ export enum CreepRole {
     Karen = 'karen',
     FighterMelee = 'fighterMelee',
     FighterRanged = 'fighterRanged',
-    Miner = 'miner'
+    Miner = 'miner',
+    Adventurer = 'adventurer',
 }

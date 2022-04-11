@@ -18,7 +18,10 @@ interface CreepSpawnTemplateReq {
     enemies?: number;
     sources?: number;
     extentions?: number;
+    extentionsLess?: number;
     spawnerEnergy?: number;
+    flagEnabled?: string;
+    flagDisabled?: string;
 }
 interface CreepSpawnTemplate {
     name: string;
@@ -26,6 +29,8 @@ interface CreepSpawnTemplate {
     body: BodyPartConstant[];
     req?: CreepSpawnTemplateReq;
     mem?: any;
+    infinite?: boolean;
+    infiniteNameParts?: string[];
 }
 
 const slaveBonuses: CreepSpawnTemplate[] = [];
@@ -35,31 +40,51 @@ slaveBonuses[CreepRole.Harvester] = [{
     },
     body: [WORK, WORK],
 }];
+slaveBonuses[CreepRole.Builder] = [{
+    req: {
+        extentions: 8,
+        energy: 5000,
+    },
+    body: [WORK, CARRY, MOVE, MOVE],
+}];
+slaveBonuses[CreepRole.Karen] = [{
+    req: {
+        extentions: 8,
+        energy: 4000,
+    },
+    body: [WORK, CARRY, MOVE, MOVE],
+}];
 
 const slaves: CreepSpawnTemplate[] = [
     {name: 'Karen', role: CreepRole.Karen, body: [WORK, CARRY, MOVE]},
-    {name: 'Koren', role: CreepRole.Karen, body: [WORK, CARRY, MOVE], req: {energy: 4500}},
+    {name: 'Koren', role: CreepRole.Karen, body: [WORK, CARRY, CARRY, MOVE, MOVE], req: {energy: 4500}},
+    {name: 'Kiren', role: CreepRole.Karen, body: [WORK, CARRY, CARRY, MOVE, MOVE], req: {extentions: 5}},
 
     {name: 'Mina', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 1}},
-    {name: 'Gumball', role: CreepRole.FighterRanged, body: [RANGED_ATTACK, RANGED_ATTACK, MOVE], req: {enemies: 1}},
+    //{name: 'Gumball', role: CreepRole.FighterMelee, body: [RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE], req: {enemies: 1}},
     {name: 'Aiko', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 1}},
-    {name: 'Feye', role: CreepRole.FighterRanged, body: [RANGED_ATTACK, RANGED_ATTACK, MOVE], req: {enemies: 2}},
+    //{name: 'Feye', role: CreepRole.FighterMelee, body: [RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE], req: {enemies: 2}},
     {name: 'Kubus', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 2}},
-    {name: 'Bobbie', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 2}},
-    {name: 'Bobby', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 2}},
+    {name: 'Bobbie', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 3}},
+    {name: 'Bobby', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 4}},
 
     {name: 'Bob', role: CreepRole.Harvester, mem: {sourceIndex: 0}, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2}},
     {name: 'Rob', role: CreepRole.Harvester, mem: {sourceIndex: 1}, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2, sources: 2}},
 
     {name: 'Harry', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {level: 2}},
-    {name: 'Brom', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 1000}},
-    {name: 'Edunand', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 1500}},
-    {name: 'Jack', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 2500}},
-    {name: 'Sploosh', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4000}},
-    {name: 'Dio', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4000}},
-    {name: 'Fob', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 4500}},
-    {name: 'Gathilo', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 5000}},
-    {name: 'Kate', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {energy: 6000}},
+    {name: 'Brom', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 1000}},
+    {name: 'Edunand', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 1500}},
+    {name: 'Jack', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 2500}},
+    {name: 'Sploosh', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 4000}},
+    {name: 'Dio', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 4000, extentionsLess: 8}},
+    {name: 'Fob', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 4500, extentionsLess: 8}},
+    {name: 'Gathilo', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 5000, extentionsLess: 8}},
+    {name: 'Kate', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 6000, extentionsLess: 8}},
+
+    //{name: 'Derpy', role: CreepRole.Adventurer, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {energy: 5000, extentions: 8, level: 3}},
+    //{name: 'Derpina', role: CreepRole.Adventurer, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {energy: 5000, extentions: 8, level: 3}},
+
+    {name: 'BLOOD FOR THE BLOOD GOD', infinite: true, infiniteNameParts: ['🩸', '🔪', '👿', '🦷', '🪓'], role: CreepRole.Adventurer, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {energy: 1000, extentions: 8, level: 3, flagEnabled: 'WAR'}},
 ]
 
 const rooms: string[] = ['W6N1'];
@@ -77,6 +102,9 @@ export class SpawnController {
         if (typeof req.level !== 'undefined' && req.level > roomDetails.level) return false;
         if (typeof req.enemies !== 'undefined' && req.enemies > roomDetails.enemies) return false;
         if (typeof req.extentions !== 'undefined' && req.extentions > roomDetails.extentions) return false;
+        if (typeof req.extentionsLess !== 'undefined' && req.extentionsLess <= roomDetails.extentions) return false;
+        if (typeof req.flagEnabled !== 'undefined' && Game.flags[req.flagEnabled]?.color != COLOR_GREEN) return false;
+        if (typeof req.flagDisabled !== 'undefined' && Game.flags[req.flagDisabled]?.color != COLOR_RED) return false;
 
         return true;
     }
@@ -92,9 +120,9 @@ export class SpawnController {
         }
 
         let availSpawner = 0;
-        const exts = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_EXTENSION);
+        const exts = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_EXTENSION || x.structureType == STRUCTURE_SPAWN);
         exts.forEach((e) => {
-            if (!(e instanceof StructureExtension)) return;
+            if (!(e instanceof StructureExtension) && !(e instanceof StructureSpawn)) return;
             availSpawner += e.store.getUsedCapacity(RESOURCE_ENERGY);
         });
 
@@ -146,7 +174,14 @@ export class SpawnController {
             let didSpawn = false;
             let lastRole = null;
             slaves.forEach((slave) => {
-                const slaveName = `${slave.name}:${roomName}`;
+                let slaveName = `${slave.name}:${roomName}`;
+                if (slave.infinite) {
+                    slaveName = '';
+
+                    while (slaveName.length <= 3 || Game.creeps[slaveName]) {
+                        slaveName += slave.infiniteNameParts[Math.floor(Math.random() * slave.infiniteNameParts.length)];
+                    }
+                }
 
                 if (lastRole !== slave.role) {
                     this.createFlag(room, `${slave.role}:`);
@@ -200,12 +235,12 @@ export class SpawnController {
                         console.log(`Added ${slave.name}:${slave.role}: ${bodyParts}, cost ${costNeeded}`);
                         break;
 
+                    case ERR_BUSY: break;
                     default:
                         console.log(`Failed to spawn ${slave.name}:${slave.role}`);
                         break;
                 }
             });
         });
-
     }
 }
