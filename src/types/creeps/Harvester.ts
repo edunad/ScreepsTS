@@ -1,9 +1,13 @@
+import type { LoDashStatic } from "lodash";
+declare var _: LoDashStatic;
+
 import { PowerPointsController } from "controllers/PowerPointsController";
 import { CakeCreep } from "types/CakeCreep";
 import { register } from "utils/Register";
 
 export interface HarvesterMemory extends CreepMemory {
     sourceID?: string;
+    storing: boolean;
 }
 
 export class Harvester extends CakeCreep {
@@ -47,11 +51,13 @@ export class Harvester extends CakeCreep {
         });
 
         // Prioritize spawn
-        targets.sort((structure) => structure.structureType === STRUCTURE_SPAWN ? -1 : structure.structureType === STRUCTURE_EXTENSION ? -1 : 0);
+        const sortedTargets = _.sortBy(targets, (structure) =>
+            structure.structureType === STRUCTURE_SPAWN ? -1 : structure.structureType === STRUCTURE_EXTENSION ? 0 : 1
+        );
 
-        if(!targets) return CakeCreep.execute(this, 'goAFK', '🔋?');
-        if(this.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffaa00'}});
+        if(!sortedTargets) return CakeCreep.execute(this, 'goAFK', '🔋?');
+        if(this.transfer(sortedTargets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            this.moveTo(sortedTargets[0], {visualizePathStyle: {stroke: '#ffaa00'}, reusePath: 5});
             this.say("🏃‍♀️");
         }
     }
@@ -62,7 +68,17 @@ export class Harvester extends CakeCreep {
     }
 
     public run() {
-        if(this.store.getFreeCapacity() > 0) return CakeCreep.execute(this, 'mineResource');
+        if(this.memory.storing && this.store[RESOURCE_ENERGY] == 0) {
+            this.memory.storing = false;
+            this.say('🔋 store');
+        }
+
+        if(!this.memory.storing && this.store.getFreeCapacity() == 0) {
+            this.memory.storing = true;
+            this.say('⚡ harvest');
+        }
+
+        if(!this.memory.storing) return CakeCreep.execute(this, 'mineResource');
         else return CakeCreep.execute(this, 'storePower');
     }
 }

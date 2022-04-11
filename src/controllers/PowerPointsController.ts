@@ -76,10 +76,11 @@ export class PowerPointsController {
 
     public static getClosestAvaliableSource(distance: RoomPosition) : PowerPoint | null {
         if(this.points == null) return null;
+
         const filtered = Object.values(this.points).filter((source) => !source.isFull());
         if(!filtered.length) return null;
 
-        return filtered.sort((source) => source.source.pos.getRangeTo(distance))[0];
+        return _.sortBy(filtered, (source) => source.source.pos.getRangeTo(distance))[0];
     }
 
     public static registerCreep(id: string, creep: Creep) {

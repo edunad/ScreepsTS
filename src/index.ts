@@ -12,6 +12,7 @@ declare global {
 
     interface CreepMemory {
         role: CreepRole;
+        level: number;
 
         // Sleep
         sleepTick?: number;

@@ -12,7 +12,7 @@ export abstract class CakeCreep extends Creep {
         if(this.memory.sleepTick) return;
         const afkPos = SettingsController.get(this.room.name, 'AFK_POS', {x: 3, y: 3});
 
-        this.moveTo(afkPos.x, afkPos.y, {visualizePathStyle: {stroke: '#ffaa00'}});
+        this.moveTo(afkPos.x, afkPos.y, {visualizePathStyle: {stroke: '#ffaa00'}, reusePath: 10});
         this.say(say);
 
         this.memory.sleepTick = 4;

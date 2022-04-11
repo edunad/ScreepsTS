@@ -2,6 +2,7 @@ import { Builder } from "$creeps/Builder";
 import { Harvester } from "$creeps/Harvester";
 import { Upgrader } from "$creeps/Upgrader";
 import { Maintainer } from "$creeps/Maintainer";
+import { Attacker } from "$creeps/Attacker";
 
 import { SpawnController, CreepRole } from './SpawnController';
 import { PowerPointsController } from './PowerPointsController';
@@ -10,7 +11,8 @@ const __scripts: {[key in CreepRole]: any} = {
     'Builder' : Builder.prototype,
     'Harvester' : Harvester.prototype,
     'Upgrader' : Upgrader.prototype,
-    'Maintainer': Maintainer.prototype
+    'Maintainer': Maintainer.prototype,
+    'Attacker': Attacker.prototype
 };
 
 export class TickController {
@@ -33,7 +35,11 @@ export class TickController {
         // Tick creeps
         for(const name in Game.creeps) {
             const creep: Creep = Game.creeps[name];
-            if(!creep.memory.role) creep.memory.role = 'Harvester'; // Default
+
+            // Defaults ---
+            if(!creep.memory.role) creep.memory.role = 'Harvester';
+            if(!creep.memory.level) creep.memory.level = 1;
+            // -----
 
             if(creep.memory.sleepTick) {
                 creep.memory.sleepTick -= 1;

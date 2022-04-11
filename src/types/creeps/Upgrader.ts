@@ -37,6 +37,9 @@ export class Upgrader extends CakeCreep {
         }
     }
 
+    public dead() {
+        console.log("Upgrader died! D:");
+    }
 
     public run() {
         if(this.memory.upgrading && this.store[RESOURCE_ENERGY] <= 0) {
