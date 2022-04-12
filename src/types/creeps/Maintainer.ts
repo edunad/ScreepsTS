@@ -53,7 +53,7 @@ export class Maintainer extends CakeCreep {
         }
 
         // Repair stuff
-        const maxWall = SettingsController.get(this.room.name, 'WALL_MAX_SPEND', 10000);
+        const maxWall = SettingsController.roomGet(this.room.name, 'WALL_MAX_SPEND', 10000);
         const needsRepair = _.filter(structs, (structure) => structure.structureType != STRUCTURE_WALL ? structure.hits < structure.hitsMax / 1.1 : structure.hits < maxWall);
 
         if(!needsRepair.length) {

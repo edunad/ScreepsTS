@@ -16,7 +16,7 @@ export class Tower extends CakeStruct {
 
     @register(STRUCTURE_TOWER)
     private repairMode(): void {
-        const maxWall = SettingsController.get(this.room.name, 'WALL_MAX_SPEND', 10000);
+        const maxWall = SettingsController.roomGet(this.room.name, 'WALL_MAX_SPEND', 10000);
         const brokenStuff = this.room.find(FIND_STRUCTURES, {filter: (structure) => structure.structureType != STRUCTURE_WALL ? structure.hits < structure.hitsMax / 1.1 : structure.hits < maxWall});
 
         if(!brokenStuff.length) {

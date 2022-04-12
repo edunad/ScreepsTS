@@ -1,11 +1,14 @@
-
 import config from '../settings.json';
 
 export class SettingsController {
-    public static get(roomID: string, val: any, defaultVal: any = null): any {
-        const roomConfig = config[roomID];
-        if(!roomConfig) return null;
+    public static get(key: string, defaultVal: any = null): any {
+        return config[key] || defaultVal;
+    }
 
-        return roomConfig[val] || defaultVal;
+    public static roomGet(roomID: string, key: string, defaultVal: any = null): any {
+        const roomConfig = config[roomID];
+        if (!roomConfig) return defaultVal;
+
+        return roomConfig[key] || defaultVal;
     }
 }

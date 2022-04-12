@@ -1,13 +1,18 @@
 {
+    "Players": {
+        "Bob": "W6N1",
+        "Hazzytje": "W9N8",
+        "FruityBooty": "W2N5"
+    },
     "W3N8": {
-        "WALL_MAX_SPEND": 40000,
-        "AFK_POS": {"x": 22, "y": 37},
+        "WALL_MAX_SPEND": 30000,
+        "AFK_POS": { "x": 22, "y": 37 },
         "SPAWNS": {
-            "Harvester": [3, 1, 3],
+            "Harvester": [2, 2, 3],
             "Builder": [0, 1, 0],
             "Upgrader": [0, 1, 0],
             "Maintainer": [0, 1, 0],
-            "Attacker": [1, 0, 0]
+            "Attacker": [4, 0, 0]
         }
     }
 }
