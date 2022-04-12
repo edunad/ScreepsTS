@@ -18,7 +18,8 @@
         "outDir": ".bin",
         "removeComments": true,
         "paths": {
-            "$creeps/*": ["./types/creeps/*"]
+            "$creeps/*": ["./types/creeps/*"],
+            "$structs/*": ["./types/structs/*"]
         }
     },
     "exclude": ["node_modules"]

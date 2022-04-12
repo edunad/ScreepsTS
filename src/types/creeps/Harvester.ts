@@ -1,6 +1,8 @@
 import type { LoDashStatic } from "lodash";
 declare var _: LoDashStatic;
 
+import { Traveler } from "libs/Traveler";
+
 import { PowerPointsController } from "controllers/PowerPointsController";
 import { CakeCreep } from "types/CakeCreep";
 import { register } from "utils/Register";
@@ -19,7 +21,7 @@ export class Harvester extends CakeCreep {
 
         const source = PowerPointsController.get(this.memory.sourceID);
         if(this.harvest(source.source) == ERR_NOT_IN_RANGE) {
-            this.moveTo(source.source, {visualizePathStyle: {stroke: '#ffaa00'}});
+            Traveler.travelTo(this, source.source, {style: {stroke: '#ffffff'}});
             this.say("🏃‍♀️");
         }
     }
@@ -57,7 +59,7 @@ export class Harvester extends CakeCreep {
 
         if(!sortedTargets) return CakeCreep.execute(this, 'goAFK', '🔋?');
         if(this.transfer(sortedTargets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(sortedTargets[0], {visualizePathStyle: {stroke: '#ffaa00'}, reusePath: 5});
+            Traveler.travelTo(this, sortedTargets[0], {style: {stroke: '#ffaa00'}});
             this.say("🏃‍♀️");
         }
     }
@@ -70,12 +72,12 @@ export class Harvester extends CakeCreep {
     public run() {
         if(this.memory.storing && this.store[RESOURCE_ENERGY] == 0) {
             this.memory.storing = false;
-            this.say('🔋 store');
+            this.say('🔋');
         }
 
         if(!this.memory.storing && this.store.getFreeCapacity() == 0) {
             this.memory.storing = true;
-            this.say('⚡ harvest');
+            this.say('⚡');
         }
 
         if(!this.memory.storing) return CakeCreep.execute(this, 'mineResource');

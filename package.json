@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^21.0.3",
-    "source-map": "^0.7.3"
+    "source-map": "^0.7.3",
+    "unique-names-generator": "^4.7.1"
   }
 }

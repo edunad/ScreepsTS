@@ -1,8 +1,11 @@
+
 import type { LoDashStatic } from "lodash";
 declare var _: LoDashStatic;
 
+import { Traveler } from "libs/Traveler";
 import { CakeCreep } from "types/CakeCreep";
 import { register } from "utils/Register";
+import { VarsController } from "controllers/VarsController";
 
 export interface AttackerMemory extends CreepMemory {}
 
@@ -15,8 +18,8 @@ export class Attacker extends CakeCreep {
         if(!targets.length) return CakeCreep.execute(this, 'goAFK', '🪓?');
 
         if(this.attack(targets[0]) == ERR_NOT_IN_RANGE) {
-            this.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-            this.say('🏃‍♀️🔪');
+            Traveler.travelTo(this, targets[0], {style: {stroke: '#ffffff'}});
+            this.say('🔪');
         }
     }
 
@@ -25,6 +28,8 @@ export class Attacker extends CakeCreep {
     }
 
     public run() {
+        /*Game.flags[]
+        const inWar = VarsController.isSet(`${}_WAR`);*/
         CakeCreep.execute(this, 'defenceMode');
     }
 }

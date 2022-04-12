@@ -26,6 +26,10 @@ export class PowerPoint {
     public isFull(): boolean {
         return Object.keys(this.creeps).length >= this.maxCreeps;
     }
+
+    public isEmpty(): boolean {
+        return this.source.energy <= 0;
+    }
 }
 
 export class PowerPointsController {
@@ -71,7 +75,7 @@ export class PowerPointsController {
 
     public static getAvaliableSource() : PowerPoint | null {
         if(this.points == null) return null;
-        return Object.values(this.points).find((source) => !source.isFull());
+        return Object.values(this.points).find((source) => !source.isFull() && !source.isEmpty());
     }
 
     public static getClosestAvaliableSource(distance: RoomPosition) : PowerPoint | null {
@@ -92,6 +96,7 @@ export class PowerPointsController {
     public static unregisterCreep(id: string, creep: Creep) {
         const source = this.points[id];
         if(!source) return;
+
         source.removeCreep(creep);
     }
 }
