@@ -34,12 +34,21 @@ interface CreepSpawnTemplate {
 }
 
 const slaveBonuses: CreepSpawnTemplate[] = [];
-slaveBonuses[CreepRole.Harvester] = [{
-    req: {
-        extentions: 5,
+slaveBonuses[CreepRole.Harvester] = [
+    {
+        req: {
+            extentions: 5,
+        },
+        body: [WORK, WORK],
     },
-    body: [WORK, WORK],
-}];
+    {
+        req: {
+            extentions: 12,
+        },
+        body: [WORK],
+    }
+];
+
 slaveBonuses[CreepRole.Builder] = [{
     req: {
         extentions: 8,
