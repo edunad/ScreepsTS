@@ -31,6 +31,7 @@ export abstract class CakeCreep extends Creep {
         if (!structs.length) return CakeCreep.execute(this, 'goAFK', '⚡?');
         if (this.withdraw(structs[0], RESOURCE_ENERGY, this.store.getFreeCapacity()) == ERR_NOT_IN_RANGE) {
             Traveler.travelTo(this, structs[0], { style: { stroke: '#ffffff' } });
+
             this.say('🏃‍♀️');
         }
     }

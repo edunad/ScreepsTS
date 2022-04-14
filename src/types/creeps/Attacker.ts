@@ -19,10 +19,11 @@ export interface AttackerMemory extends CreepMemory {
 
 export class Attacker extends CakeCreep {
     public memory: AttackerMemory;
+    public static propaganda: string[] = ['[̲̅$̲̅(̲̅1)̲̅$̲̅]', 'o(>< )o', '⌒( ÒㅅÓ)⌒', 'ヽ( -Д- ◎'];
 
     @register('Attacker')
     private defenceMode(): void {
-        const targets = this.room.find(FIND_HOSTILE_CREEPS);
+        const targets = this.room.find(FIND_HOSTILE_CREEPS /*, {filter: (creep) => creep.}*/);
         if (!targets.length) return CakeCreep.execute(this, 'goAFK', '🪓?');
 
         if (this.attack(targets[0]) == ERR_NOT_IN_RANGE) {
@@ -49,7 +50,7 @@ export class Attacker extends CakeCreep {
         });
 
         Traveler.travelTo(this, structs[0], { style: { stroke: '#ff0000' } });
-        this.say('C++ SUCKS', true);
+        this.say(Attacker.propaganda[Math.getRandom(0, Attacker.propaganda.length - 1)], true);
     }
 
     @register('Attacker')
@@ -74,7 +75,7 @@ export class Attacker extends CakeCreep {
                 //CakeCreep.execute(this, 'createHAVOC');
                 CakeCreep.execute(this, 'createColdWar');
             } else {
-                if (!this.memory.roomTargetSCAN) {
+                if (this.memory.roomTargetSCAN != this.room.name) {
                     const exit = PlayerFinderController.calculateNextRoom(this, this.memory.inWarWith);
                     if (exit == ERR_NO_PATH) {
                         this.say('😨');
@@ -83,12 +84,31 @@ export class Attacker extends CakeCreep {
 
                     this.memory.roomTargetPOS = exit;
                     this.memory.roomTargetSCAN = this.room.name; // The room we scanned in
+
                     this.say(`🧠`);
-                    return;
-                } else {
-                    CakeCreep.execute(this, 'moveToWar');
                 }
+
+                CakeCreep.execute(this, 'moveToWar');
             }
+        }
+    }
+
+    @register('Attacker')
+    private extraMove(): void {
+        switch (this.memory.roomTargetPOS) {
+            case FIND_EXIT_TOP:
+                this.move(TOP);
+                break;
+            case FIND_EXIT_LEFT:
+                this.move(LEFT);
+                break;
+            case FIND_EXIT_RIGHT:
+                this.move(RIGHT);
+                break;
+            default:
+            case FIND_EXIT_BOTTOM:
+                this.move(BOTTOM);
+                break;
         }
     }
 
@@ -97,37 +117,28 @@ export class Attacker extends CakeCreep {
         if (this.memory.roomTargetPOS == ERR_NO_PATH) return;
 
         const exits = this.room.find(this.memory.roomTargetPOS);
-        const exit = _.sortBy(exits, (exit) => exit.getRangeTo(this.pos))[0];
-
-        if (!exit) {
+        if (!exits.length) {
             // No exits found?
+            console.log('NO EXIT');
             CakeCreep.execute(this, 'clearTarget');
             return;
         }
 
+        const exit = _.sortBy(exits, (exit) => exit.getRangeTo(this.pos))[0];
         // We are in the room we scanned, keep travelling to the exit
         if (this.room.name === this.memory.roomTargetSCAN) {
-            Traveler.travelTo(this, exit, { style: { stroke: '#ffffff' }, offRoad: false, repath: 0 });
+            Traveler.travelTo(this, exit, {
+                style: { stroke: '#ffffff' },
+                offRoad: true,
+                allowSK: true,
+                useFindRoute: true,
+                repath: 0,
+            });
             this.say('🪓');
             return;
         } else {
             // We have arrived to the room, get out of the room pad
-            switch (this.memory.roomTargetPOS) {
-                case FIND_EXIT_TOP:
-                    this.move(TOP);
-                    break;
-                case FIND_EXIT_LEFT:
-                    this.move(LEFT);
-                    break;
-                case FIND_EXIT_RIGHT:
-                    this.move(RIGHT);
-                    break;
-                default:
-                case FIND_EXIT_BOTTOM:
-                    this.move(BOTTOM);
-                    break;
-            }
-
+            CakeCreep.execute(this, 'extraMove');
             CakeCreep.execute(this, 'clearTarget');
         }
     }

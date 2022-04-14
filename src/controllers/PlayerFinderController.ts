@@ -7,6 +7,7 @@ const roomBlackList: { [id: string]: { [id: string]: RoomExits } } = {
         W6N5: FIND_EXIT_RIGHT,
         W5N5: FIND_EXIT_BOTTOM,
         W5N4: FIND_EXIT_BOTTOM,
+        W8N3: FIND_EXIT_BOTTOM,
     },
 };
 

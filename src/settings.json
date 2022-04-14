@@ -12,7 +12,7 @@
             "Builder": [0, 1, 0],
             "Upgrader": [0, 1, 0],
             "Maintainer": [0, 1, 0],
-            "Attacker": [4, 0, 0]
+            "Attacker": [0, 2, 0]
         }
     }
 }

@@ -1,10 +1,11 @@
-
-import type { LoDashStatic } from "lodash";
+import type { LoDashStatic } from 'lodash';
 declare var _: LoDashStatic;
 
-import { Traveler } from "libs/Traveler";
-import { CakeCreep } from "types/CakeCreep";
-import { register } from "utils/Register";
+import { VarsController } from 'controllers/VarsController';
+
+import { Traveler } from 'libs/Traveler';
+import { CakeCreep } from 'types/CakeCreep';
+import { register } from 'utils/Register';
 
 export interface BuilderMemory extends CreepMemory {
     building: boolean;
@@ -16,32 +17,36 @@ export class Builder extends CakeCreep {
     @register('Builder')
     private buildMode(): void {
         const targets = this.room.find(FIND_CONSTRUCTION_SITES);
-        if(!targets.length) return CakeCreep.execute(this, 'goAFK', '🏢?');
+        if (!targets.length) {
+            const UPGRADER_ENABLED = VarsController.isSet(`UPGRADE_${this.room.name}_ENABLED`);
+            if (!UPGRADER_ENABLED) return CakeCreep.execute(this, 'goAFK', '🏢');
 
-        targets.sort((structure) => structure.structureType === STRUCTURE_EXTENSION ? -1 : 0);
-
-        if(this.build(targets[0]) == ERR_NOT_IN_RANGE) {
-            Traveler.travelTo(this, targets[0], {style: {stroke: '#ffffff'}});
-            this.say('🏃‍♀️');
+            return CakeCreep.executeSpecial(this, 'Upgrader', 'upgradeMode');
+        } else {
+            targets.sort((structure) => (structure.structureType === STRUCTURE_EXTENSION ? -1 : 0));
+            if (this.build(targets[0]) == ERR_NOT_IN_RANGE) {
+                Traveler.travelTo(this, targets[0], { style: { stroke: '#ffffff' } });
+                this.say('🏃‍♀️');
+            }
         }
     }
 
     public dead() {
-        console.log("Builder died! D:");
+        console.log('Builder died! D:');
     }
 
     public run() {
-        if(this.memory.building && this.store[RESOURCE_ENERGY] == 0) {
+        if (this.memory.building && this.store[RESOURCE_ENERGY] == 0) {
             this.memory.building = false;
             this.say('⚡');
         }
 
-        if(!this.memory.building && this.store.getFreeCapacity() == 0) {
+        if (!this.memory.building && this.store.getFreeCapacity() == 0) {
             this.memory.building = true;
             this.say('🚧');
         }
 
-        if(this.memory.building) CakeCreep.execute(this, 'buildMode');
+        if (this.memory.building) CakeCreep.execute(this, 'buildMode');
         else CakeCreep.execute(this, 'collectMode');
     }
 }
