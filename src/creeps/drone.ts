@@ -41,5 +41,9 @@ export class CreepDrone {
 				creep.moveTo(spawn);
 			}
 		}
+
+		if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0) {
+			creep.memory["state"] = "grab_resources";
+		}
 	}
 }
