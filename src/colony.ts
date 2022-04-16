@@ -2,6 +2,7 @@ import { CreepWorker } from 'creeps/worker';
 import { CreepStaticMiner } from 'creeps/static_miner';
 import { Age } from 'enums/age';
 import { CreepHauler } from 'creeps/hauler';
+import _ from 'lodash';
 
 export class Colony {
 	public room: Room;
@@ -10,6 +11,7 @@ export class Colony {
 	public spawn: StructureSpawn;
 	public sources: Source[];
 	public creeps: Creep[];
+	public towers: StructureTower[];
 
 	constructor(room: Room) {
 		this.room = room;
@@ -44,6 +46,10 @@ export class Colony {
 		this.creeps = Object.values(Game.creeps).filter((creep: Creep) => creep.memory.hive == this.room.name);
 	}
 
+	findTowers() {
+		this.towers = this.room.find(FIND_MY_STRUCTURES, { filter: (structure) => structure.structureType == STRUCTURE_TOWER });
+	}
+
 	determineAge() {
 		// single spawn with no extensions is always bronze age
 		if (this.room.energyCapacityAvailable == 300) {
@@ -63,7 +69,7 @@ export class Colony {
 				}
 			}
 			if (!sourceMem.minerName) {
-				const newMinerName = 'miner' + '-' + Game.time;
+				const newMinerName = 'miner-' + Game.time;
 				const minerSpawnResult = this.spawn.spawnCreep([MOVE, CARRY, WORK, WORK], newMinerName, {
 					memory: { role: 'static_miner', state: 'positioning', hive: this.room.name },
 				});
@@ -77,23 +83,30 @@ export class Colony {
 
 	runSpawner() {
 		if (this.creeps.filter((creep) => creep.memory.role == 'hauler').length < this.requiredNumberOfHaulers()) {
-			this.spawn.spawnCreep([MOVE, MOVE, MOVE, CARRY, CARRY, CARRY], undefined, {
+			const newHaulerName = 'hauler-' + Game.time;
+			this.spawn.spawnCreep([MOVE, MOVE, MOVE, CARRY, CARRY, CARRY], newHaulerName, {
 				memory: { role: 'hauler', state: 'fetch_resources', hive: this.room.name },
 			});
-		}
-
-		if (this.creeps.filter((creep) => creep.memory.role == 'worker').length < this.requiredNumberOfWorkers()) {
-			this.spawn.spawnCreep([MOVE, MOVE, CARRY, WORK], undefined, {
+		} else if (this.creeps.filter((creep) => creep.memory.role == 'worker').length < this.requiredNumberOfWorkers()) {
+			const newWorkerName = 'worker-' + Game.time;
+			this.spawn.spawnCreep([MOVE, MOVE, CARRY, WORK], newWorkerName, {
 				memory: { role: 'worker', state: 'fetch_resources', hive: this.room.name },
 			});
 		}
 	}
 
 	requiredNumberOfHaulers() {
-		return 1;
+		if (this.sources.map((source) => this.room.memory.sources[source.id].container).every(_.identity)) {
+			return 1;
+		}
+
+		return 0;
 	}
 
 	requiredNumberOfWorkers() {
+		if (!this.sources.map((source) => this.room.memory.sources[source.id].container).some(_.identity)) {
+			return 0;
+		}
 		return 2;
 	}
 
@@ -102,9 +115,11 @@ export class Colony {
 		this.findSpawn();
 		this.findMainStorage();
 		this.findCreeps();
+		this.findTowers();
 		this.determineAge();
 
 		this.runSources();
+		this.runSpawner();
 
 		this.creeps.forEach((creep: Creep) => {
 			if (creep.memory.role == 'static_miner') {
