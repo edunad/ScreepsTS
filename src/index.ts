@@ -32,13 +32,6 @@ declare global {
 	}
 }
 
-class DesiredCreep {
-	public name: string;
-	public role: string; //todo enum
-	public initial_state: string;
-	public body: BodyPartConstant[];
-}
-
 declare var module: any;
 module.exports.loop = () => {
 	for (let name in Memory.creeps) {
