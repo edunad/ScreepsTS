@@ -41,7 +41,7 @@ export class Traveler {
                 let curX = creep.pos.x;
                 let curY = creep.pos.y;
                 const line = new RoomVisual(creep.room.name);
-                for (let i = 1; i < tmpPath.length; i++) {
+                for (let i = 1; i < tmpPath.length && i < 20; i++) {
                     let nextX = curX;
                     let nextY = curY;
                     switch (parseInt(tmpPath[i])) {

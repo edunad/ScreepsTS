@@ -23,10 +23,16 @@ import { CreepTaskAttackRanged } from "tasks/CreepTaskAttackRanged";
 import { CreepAdventurer } from "creeps/CreepAdventurer";
 import { CreepTaskMove } from "tasks/CreepTaskMove";
 import { CreepTaskSleep } from "tasks/CreepTaskSleep";
+import { CreepCollector } from "creeps/CreepCollector";
+import { CreepTaskPickup } from "tasks/CreepTaskPickup";
+import { CreepExtractor } from "creeps/CreepExtractor";
+import { CreepTaskRegen } from "tasks/CreepTaskRegen";
+import { BuildController } from "./BuildController";
 
 export class HiveController {
     public creeps: CreepBase[] = [];
     public spawner: SpawnController = new SpawnController();
+    public builder: BuildController = new BuildController();
 
     public tick(): void {
         for(let name in Memory.creeps) {
@@ -76,21 +82,55 @@ export class HiveController {
             this.spawner.checkRespawns();
         });
 
+        catchError(() => {
+            this.builder.tick();
+        });
+
         for (let roomName in Game.rooms) {
             const room = Game.rooms[roomName];
-            const structs = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType == STRUCTURE_TOWER);
-            if (structs.length == 0) continue;
+            const links = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType == STRUCTURE_LINK);
+            links.forEach((l: StructureLink) => {
+                if (l.cooldown > 0) return;
+
+                if ((l.store.getFreeCapacity(RESOURCE_ENERGY) ?? 9999) <= 100) {
+                    if (room.find(FIND_MY_CREEPS).filter((c) => c.memory.role === CreepRole.Harvester && c.pos.getRangeTo(l.pos) < 2).length > 0) {
+                        links.forEach((l2: StructureLink) => {
+                            if (l.id === l2.id) return;
+                            if ((l2.store.getFreeCapacity(RESOURCE_ENERGY) ?? 9999) < 100) return;
+                            l.transferEnergy(l2);
+                        });
+                    }
+                }
+            });
+
+            const towers = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType == STRUCTURE_TOWER);
+            if (towers.length == 0) continue;
 
             const enemies = room.find(FIND_HOSTILE_CREEPS);
             const allies = room.find(FIND_MY_CREEPS).filter((c) => c.hits < c.hitsMax);
 
-            structs.forEach((s) => {
+            var structures = room.find(FIND_STRUCTURES).filter((structure) => {
+                return !(
+                    structure.structureType === 'controller' ||
+                    (structure.structureType === STRUCTURE_WALL && structure.hits > 30000) ||
+                    (structure.structureType === STRUCTURE_RAMPART && structure.hits > 50000) ||
+                    structure.hitsMax / 4 * 3.3 < structure.hits
+                );
+            });
+
+            towers.forEach((s) => {
                 if (!(s instanceof StructureTower)) return;
 
                 if (enemies.length == 0) {
                     if (allies.length > 0) {
                         const closest = _.sortBy(allies, s => s.pos.getRangeTo(s));
                         s.heal(closest[0]);
+                    } else if (s.store && (s.store.getUsedCapacity(RESOURCE_ENERGY) ?? 0) > (s.store.getCapacity(RESOURCE_ENERGY) ?? 1) / 2) {
+                        structures = _.sortBy(structures, s => s.pos.getRangeTo(s))
+                        for(var id in structures) {
+                            s.repair(structures[id]);
+                            return;
+                        }
                     }
 
                     return;
@@ -111,6 +151,8 @@ export class HiveController {
             case CreepRole.FighterMelee: wrapper = new CreepFighterMelee(creep); break;
             case CreepRole.FighterRanged: wrapper = new CreepFighterRanged(creep); break;
             case CreepRole.Adventurer: wrapper = new CreepAdventurer(creep); break;
+            case CreepRole.Collector: wrapper = new CreepCollector(creep); break;
+            case CreepRole.Extractor: wrapper = new CreepExtractor(creep); break;
         }
 
         if (!wrapper) {
@@ -132,6 +174,8 @@ export class HiveController {
                 case CreepTask.AttackRanged: task = new CreepTaskAttackRanged(); break;
                 case CreepTask.Move: task = new CreepTaskMove(); break;
                 case CreepTask.Sleep: task = new CreepTaskSleep(); break;
+                case CreepTask.Pickup: task = new CreepTaskPickup(); break;
+                case CreepTask.Regen: task = new CreepTaskRegen(); break;
             }
 
             if (task) {

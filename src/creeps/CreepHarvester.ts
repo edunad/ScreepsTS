@@ -35,27 +35,28 @@ export class CreepHarvester extends CreepBase {
             //STRUCTURE_EXTENSION,
             //STRUCTURE_SPAWN,
             //STRUCTURE_TOWER,
+            STRUCTURE_STORAGE,
             STRUCTURE_CONTAINER,
+            STRUCTURE_LINK,
             //STRUCTURE_CONTROLLER,
         ];
 
-        var targets = this.obj.room.find(FIND_STRUCTURES);
-        targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s))
+        var targets = this.obj.room.find(FIND_STRUCTURES).filter((x: any) => whitelist.includes(x.structureType));
+        targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s) + (s.structureType !== STRUCTURE_LINK ? 1 : 0));
 
-        var endTarget = null;
-        whitelist.forEach((type) => {
-            if (endTarget) return;
+        //var endTarget = null;
+        //whitelist.forEach((type) => {
+        //    if (endTarget) return;
 
             for(var id in targets) {
                 const target: any = targets[id];
-                if (target.structureType !== type) continue;
                 if (target.store && target.store.getFreeCapacity(RESOURCE_ENERGY) == 0) continue;
 
-                endTarget = target;
+        //        endTarget = target;
                 this.setTask(new CreepTaskTransfer(target));
                 break;
             }
-        });
+        //});
     }
 
     public onGetNextTask() {

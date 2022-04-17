@@ -48,9 +48,10 @@ export class CreepTaskMove extends CreepTaskBase {
         }
 
         if (creep.obj.room.name != this.target.roomName) {
-            const exitDir: any = creep.obj.room.findExitTo(this.target.roomName);
-            const exitPos = pos.findClosestByRange(exitDir);
-            Traveler.travelTo(creep.obj, exitPos, {style: this.travelOptions});
+            //const exitDir: any = creep.obj.room.findExitTo(this.target.roomName);
+            //const exitPos = pos.findClosestByRange(exitDir);
+            //Traveler.travelTo(creep.obj, exitPos, {style: this.travelOptions});
+            Traveler.travelTo(creep.obj, this.target, {style: this.travelOptions});
 
             creep.obj.say(CreepChat.moving, true);
             return false;

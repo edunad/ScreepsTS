@@ -1,38 +1,46 @@
+import { SourceController } from "controllers/SourceController";
 import { CreepBase } from "creeps/CreepBase";
+import { TransformStream } from "stream/web";
 import { CreepChat } from "types/CreepChat";
 import { CreepTask } from "types/CreepTask";
-import { catchError } from "utils/ScreepsERR";
+import { ResourceTypes } from "types/ResourceList";
+import { catchError, throwError } from "utils/ScreepsERR";
 import { Traveler } from "utils/Traveler";
 import { TravelToOptions } from "utils/TravelerInterfaces";
 import { CreepTaskBase } from "./CreepTask";
 
-export class CreepTaskRepair extends CreepTaskBase {
+export class CreepTaskPickup extends CreepTaskBase {
     private target: string;
-    private travelOptions: TravelToOptions = {style: {color: '#AAAA00', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
+    private travelOptions: TravelToOptions = {style: {color: '#0000AA', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
 
-    constructor(struct?: Structure) {
+    constructor(struct?: Resource|Tombstone|Ruin) {
         super();
         if (struct) this.target = struct.id;
     }
 
     public onTick(creep: CreepBase): boolean {
-        const target: any = Game.getObjectById(this.target);
+        const target: Resource|Tombstone = Game.getObjectById(this.target);
         if (!target) {
             creep.obj.say(CreepChat.error, true);
             return true;
         }
 
-        if (target.hitsMax == target.hits || creep.obj.store.getUsedCapacity() == 0) {
-            creep.obj.say(CreepChat.done, true);
-            return true;
+        let amount = creep.obj.store.getUsedCapacity();
+        let did: number = 0;
+        if (target instanceof Tombstone || target instanceof Ruin) {
+            if (target.store.getUsedCapacity() == 0){
+                creep.obj.say(CreepChat.done, true);
+                return true;
+            }
+
+            for (let i in ResourceTypes) {
+                const amm = target.store.getUsedCapacity(ResourceTypes[i]);
+                if (amm > 0) did = creep.obj.withdraw(target, ResourceTypes[i], amm);
+            }
+        } else {
+            did = creep.obj.pickup(target);
         }
 
-        if ((target.structureType === STRUCTURE_WALL && target.hits > 30000) || (target.structureType === STRUCTURE_RAMPART && target.hits > 50000)) {
-            creep.obj.say(CreepChat.done, true);
-            return true;
-        }
-
-        const did = catchError(() => creep.obj.repair(target));
         if (typeof did === 'undefined') {
             creep.obj.say(CreepChat.error, true);
             return true;
@@ -50,12 +58,12 @@ export class CreepTaskRepair extends CreepTaskBase {
                 return false;
             }
 
-            if(did == ERR_NOT_ENOUGH_RESOURCES) {
+            if(did == ERR_FULL || did == ERR_NOT_ENOUGH_RESOURCES) {
                 creep.obj.say(CreepChat.done, true);
                 return true;
             }
 
-            creep.obj.say(`${CreepChat.error}:${did}:Repair`);
+            creep.obj.say(`${CreepChat.error}:${did}:Transfer`);
             return false;
         }
 
@@ -74,6 +82,6 @@ export class CreepTaskRepair extends CreepTaskBase {
     }
 
     public getType(): CreepTask {
-        return CreepTask.Repair;
+        return CreepTask.Pickup;
     }
 }

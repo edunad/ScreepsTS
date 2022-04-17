@@ -10,11 +10,15 @@ import { CreepTaskBase } from "./CreepTask";
 
 export class CreepTaskTransfer extends CreepTaskBase {
     private target: string;
+    private resource: ResourceConstant = RESOURCE_ENERGY;
+    private amount?: number;
     private travelOptions: TravelToOptions = {style: {color: '#0000AA', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
 
-    constructor(struct?: Structure) {
+    constructor(struct?: Structure, resource?: ResourceConstant, amount?: number) {
         super();
         if (struct) this.target = struct.id;
+        if (resource) this.resource = resource;
+        if (amount) this.amount = amount;
     }
 
     public onTick(creep: CreepBase): boolean {
@@ -24,12 +28,12 @@ export class CreepTaskTransfer extends CreepTaskBase {
             return true;
         }
 
-        let amount = creep.obj.store.getUsedCapacity(RESOURCE_ENERGY);
+        let amount = creep.obj.store.getUsedCapacity(this.resource);
         if (target.store) {
-            amount = Math.min(amount, target.store.getFreeCapacity(RESOURCE_ENERGY))
+            amount = Math.min(amount, target.store.getFreeCapacity(this.resource))
         }
-        
-        const did = catchError(() => creep.obj.transfer(target, RESOURCE_ENERGY, amount));
+
+        const did = catchError(() => creep.obj.transfer(target, this.resource, amount));
         if (typeof did === 'undefined') {
             creep.obj.say(CreepChat.error, true);
             return true;
@@ -56,7 +60,7 @@ export class CreepTaskTransfer extends CreepTaskBase {
             return false;
         }
 
-        if (creep.obj.store.getUsedCapacity(RESOURCE_ENERGY) == 0) {
+        if (creep.obj.store.getUsedCapacity(this.resource) == 0) {
             creep.obj.say(CreepChat.done, true);
             return true;
         }
@@ -67,12 +71,16 @@ export class CreepTaskTransfer extends CreepTaskBase {
 
     public serialize(): object {
         return {
-            target: this.target
+            target: this.target,
+            resource: this.resource,
+            amount: this.amount,
         };
     }
 
     public deserialize(data: any): void {
         this.target = data.target;
+        this.resource = data.resource ?? RESOURCE_ENERGY;
+        this.amount = data.amount;
     }
 
     public getType(): CreepTask {

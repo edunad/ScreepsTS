@@ -10,4 +10,6 @@ export enum CreepTask {
     Sleep = 'sleep',
     AttackMelee = 'attackMelee',
     AttackRanged = 'attackRanged',
+    Pickup = 'pickup',
+    Regen = 'regen',
 }

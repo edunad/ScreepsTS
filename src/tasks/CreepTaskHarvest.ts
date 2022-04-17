@@ -11,13 +11,13 @@ export class CreepTaskHarvest extends CreepTaskBase {
     private target: string;
     private travelOptions: TravelToOptions = {style: {color: '#AA0000', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
 
-    constructor(source?: Source) {
+    constructor(source?: Source | Mineral) {
         super();
         if (source) this.target = source.id;
     }
 
     public onTick(creep: CreepBase): boolean {
-        const target: Source = Game.getObjectById(this.target);
+        const target: Source | Mineral = Game.getObjectById(this.target);
         if (!target) {
             creep.obj.say(CreepChat.error, true);
             return true;
@@ -28,7 +28,7 @@ export class CreepTaskHarvest extends CreepTaskBase {
             return true;
         }
 
-        const dropped = target.room.find(FIND_DROPPED_RESOURCES, {filter: (d) => {return (d.resourceType == RESOURCE_ENERGY && d.pos.isEqualTo(creep.obj.pos))}});
+        const dropped = target.room.find(FIND_DROPPED_RESOURCES, {filter: (d) => {return (d.resourceType != RESOURCE_ENERGY && d.pos.isEqualTo(creep.obj.pos))}});
         if (dropped.length > 0) dropped.forEach((d) => creep.obj.pickup(d));
 
         const did = catchError(() => creep.obj.harvest(target));
@@ -41,6 +41,11 @@ export class CreepTaskHarvest extends CreepTaskBase {
             if(did == ERR_INVALID_TARGET) {
                 creep.obj.say(CreepChat.error, true);
                 return true;
+            }
+
+            if(did == ERR_TIRED) {
+                creep.obj.say(CreepChat.tired, true);
+                return false;
             }
 
             if(did == ERR_NOT_IN_RANGE) {

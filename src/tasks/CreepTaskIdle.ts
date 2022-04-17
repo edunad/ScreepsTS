@@ -23,7 +23,13 @@ export class CreepTaskIdle extends CreepTaskBase {
             return true;
         }
 
-        creep.obj.say(this.chat, true);
+        if (creep.obj.room.find(FIND_HOSTILE_CREEPS).length > 0) {
+            var texts = ['🤬', '🤡', '🐏', this.chat];
+            creep.obj.say(texts[Math.floor(Math.random() * texts.length)], true);
+        } else {
+            creep.obj.say(this.chat, true);
+        }
+
         creep.wander();
         return false;
     }

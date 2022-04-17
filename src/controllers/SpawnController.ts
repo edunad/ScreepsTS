@@ -17,7 +17,10 @@ interface CreepSpawnTemplateReq {
     level?: number;
     enemies?: number;
     sources?: number;
+    storages?: number;
     extentions?: number;
+    extractors?: number;
+    droppedResources?: number;
     extentionsLess?: number;
     spawnerEnergy?: number;
     flagEnabled?: string;
@@ -45,17 +48,25 @@ slaveBonuses[CreepRole.Harvester] = [
         req: {
             extentions: 12,
         },
-        body: [WORK],
+        body: [WORK, MOVE],
     }
 ];
 
-slaveBonuses[CreepRole.Builder] = [{
-    req: {
-        extentions: 8,
-        energy: 5000,
-    },
-    body: [WORK, CARRY, MOVE, MOVE],
-}];
+slaveBonuses[CreepRole.Builder] = [
+    {
+        req: {
+            extentions: 8,
+            energy: 5000,
+        },
+        body: [WORK, CARRY, MOVE, MOVE],
+    },{
+        req: {
+            storages: 1,
+        },
+        body: [CARRY, MOVE],
+    }
+];
+
 slaveBonuses[CreepRole.Karen] = [{
     req: {
         extentions: 8,
@@ -89,11 +100,23 @@ const slaves: CreepSpawnTemplate[] = [
     {name: 'Fob', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 4500, extentionsLess: 8}},
     {name: 'Gathilo', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 5000, extentionsLess: 8}},
     {name: 'Kate', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 6000, extentionsLess: 8}},
+    {name: 'Sandra', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 10000}},
+    {name: 'Josh', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 10000}},
+    {name: 'Jaokob', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 10000}},
+    {name: 'Amy', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 15000}},
+    {name: 'Isaac', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 15000}},
+    {name: 'Robbert', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 15000}},
+    {name: 'Sebas', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {flagDisabled: 'WAR', energy: 15000}},
 
-    //{name: 'Derpy', role: CreepRole.Adventurer, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {energy: 5000, extentions: 8, level: 3}},
+    {name: 'Roomba', role: CreepRole.Collector, body: [CARRY, MOVE, CARRY, MOVE, CARRY, MOVE, CARRY, MOVE], req: {droppedResources: 200}},
+    {name: 'Carl', role: CreepRole.Extractor, body: [WORK, CARRY, CARRY, MOVE, MOVE, MOVE, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, WORK, MOVE, WORK], req: {extractors: 1}},
+
+    //{name: 'Derpy', role: CreepRole.Adventurer, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE, CLAIM, MOVE], req: {energy: 5000, extentions: 8, level: 3}},
     //{name: 'Derpina', role: CreepRole.Adventurer, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {energy: 5000, extentions: 8, level: 3}},
 
-    {name: 'BLOOD FOR THE BLOOD GOD', infinite: true, infiniteNameParts: ['🩸', '🔪', '👿', '🦷', '🪓'], role: CreepRole.Adventurer, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {energy: 1000, extentions: 8, level: 3, flagEnabled: 'WAR'}},
+    //{name: 'BLOOD FOR THE BLOOD GOD', infinite: true, infiniteNameParts: ['🩸', '🔪', '👿', '🦷', '🪓'], role: CreepRole.Adventurer, body: [TOUGH, MOVE, ATTACK, MOVE, ATTACK, MOVE], req: {energy: 1000, extentions: 8, level: 3, flagEnabled: 'WAR'}},
+    {name: 'BLOOD FOR THE BLOOD GOD', infinite: true, infiniteNameParts: ['🩸', '🔪', '👿', '🦷', '🪓'], role: CreepRole.Adventurer, body: [TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE], req: {energy: 1000, extentions: 8, level: 3, flagEnabled: 'WAR'}},
+    //{name: 'BLOOD FOR THE BLOOD GOD', infinite: true, infiniteNameParts: ['🩸', '🔪', '👿', '🦷', '🪓'], role: CreepRole.Adventurer, body: [MOVE], req: {energy: 1000, extentions: 8, level: 3, flagEnabled: 'WAR'}},
 ]
 
 const rooms: string[] = ['W6N1'];
@@ -108,6 +131,9 @@ export class SpawnController {
     private checkReq(req: CreepSpawnTemplateReq, room: Room, roomDetails: CreepSpawnTemplateReq): boolean {
         if (typeof req.energy !== 'undefined' && roomDetails.energy < req.energy) return false;
         if (typeof req.sources !== 'undefined' && roomDetails.sources < req.sources) return false;
+        if (typeof req.storages !== 'undefined' && roomDetails.storages < req.storages) return false;
+        if (typeof req.extractors !== 'undefined' && roomDetails.extractors < req.extractors) return false;
+        if (typeof req.droppedResources !== 'undefined' && roomDetails.droppedResources < req.droppedResources) return false;
         if (typeof req.level !== 'undefined' && req.level > roomDetails.level) return false;
         if (typeof req.enemies !== 'undefined' && req.enemies > roomDetails.enemies) return false;
         if (typeof req.extentions !== 'undefined' && req.extentions > roomDetails.extentions) return false;
@@ -119,14 +145,18 @@ export class SpawnController {
     }
 
     private getRoomReqs(room: Room): CreepSpawnTemplateReq {
-        const targets = room.find(FIND_STRUCTURES);
-        var energy = 0;
-        for(var id in targets) {
-            const target = targets[id];
+        const structures = room.find(FIND_STRUCTURES);
+        let energy = 0;
+        let resourcesOnGround = 0;
+        for(var id in structures) {
+            const target = structures[id];
+            if (target instanceof Ruin || target instanceof Tombstone) { resourcesOnGround += target.store.getUsedCapacity(); continue; };
             if (target.structureType !== STRUCTURE_CONTAINER && target.structureType !== STRUCTURE_STORAGE) continue;
 
             energy += target.store.getUsedCapacity(RESOURCE_ENERGY);
         }
+
+        room.find(FIND_DROPPED_RESOURCES).forEach((r) => resourcesOnGround += r.amount);
 
         let availSpawner = 0;
         const exts = room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_EXTENSION || x.structureType == STRUCTURE_SPAWN);
@@ -135,13 +165,18 @@ export class SpawnController {
             availSpawner += e.store.getUsedCapacity(RESOURCE_ENERGY);
         });
 
+        room.find(FIND_DROPPED_RESOURCES).forEach((r) => resourcesOnGround += r.amount);
+
         return  {
             sources: room.find(FIND_SOURCES).length,
             enemies: room.find(FIND_HOSTILE_CREEPS).length + room.find(FIND_HOSTILE_STRUCTURES).length,
+            storages: structures.filter((x) => x.structureType == STRUCTURE_STORAGE).length,
+            extractors: structures.filter((x) => x.structureType == STRUCTURE_EXTRACTOR).length,
             extentions: exts.length,
             energy: energy,
             level: room.controller.level,
             spawnerEnergy: availSpawner,
+            droppedResources: resourcesOnGround,
         };
     }
 

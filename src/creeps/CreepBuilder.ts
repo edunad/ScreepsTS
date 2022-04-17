@@ -44,6 +44,8 @@ export class CreepBuilder extends CreepBase {
         for(var id in structures) {
             const structure = structures[id];
             if (structure.structureType === 'controller') continue;
+            if (structure.structureType === STRUCTURE_WALL && structure.hits > 30000) continue;
+            if (structure.structureType === STRUCTURE_RAMPART && structure.hits > 50000) continue;
             if (structure.hitsMax / 4 * 3 < structure.hits) continue;
 
             this.setTask(new CreepTaskRepair(structure));
@@ -75,7 +77,7 @@ export class CreepBuilder extends CreepBase {
 
         for(var id in structures) {
             const structure = structures[id];
-            if (structure.structureType !== STRUCTURE_CONTAINER && structure.structureType !== STRUCTURE_SPAWN) continue;
+            if (structure.structureType !== STRUCTURE_CONTAINER && structure.structureType !== STRUCTURE_STORAGE && structure.structureType !== STRUCTURE_SPAWN && structure.structureType !== STRUCTURE_LINK) continue;
             const cap = structure.store.getUsedCapacity(RESOURCE_ENERGY);
             if (cap == 0) continue;
             if (structure.structureType === STRUCTURE_SPAWN && cap < 300) continue;

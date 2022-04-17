@@ -26,27 +26,29 @@ export class CreepKaren extends CreepBuilder {
     private findEnergyStorage(): void {
         const whitelist = [
             STRUCTURE_CONTAINER,
+            STRUCTURE_STORAGE,
+            STRUCTURE_LINK,
         ];
 
         var targets = this.obj.room.find(FIND_STRUCTURES);
         targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s))
         const space = this.obj.store.getFreeCapacity(RESOURCE_ENERGY);
 
-        whitelist.forEach((type) => {
+        //whitelist.forEach((type) => {
             if (this.getTask()) return;
 
             for(var id in targets) {
                 const target: any = targets[id];
-                if (target.structureType !== type) continue;
+                if (!whitelist.includes(target.structureType)) continue;
                 if (!target.store) continue;
                 if (target.store.getUsedCapacity(RESOURCE_ENERGY) < space) continue;
 
                 this.setTask(new CreepTaskWithdraw(target, space));
                 break;
             }
-        });
+        //});
 
-        if (!this.getTask() && getHive().creeps.filter(x => x instanceof CreepHarvester).length < this.obj.room.find(FIND_SOURCES).length) this.findEnergySource2();
+        if (!this.getTask() && getHive().creeps.filter(x => x instanceof CreepHarvester && x.obj.room.name === this.obj.room.name).length < this.obj.room.find(FIND_SOURCES).length) this.findEnergySource2();
     }
 
     private findSpawnerBuilding(): void {
@@ -54,10 +56,11 @@ export class CreepKaren extends CreepBuilder {
             STRUCTURE_EXTENSION,
             STRUCTURE_SPAWN,
             STRUCTURE_TOWER,
+            STRUCTURE_LAB,
         ];
 
         var targets = this.obj.room.find(FIND_STRUCTURES);
-        targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s))
+        targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s));
 
         var endTarget = null;
         whitelist.forEach((type) => {

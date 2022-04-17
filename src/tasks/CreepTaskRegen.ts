@@ -1,3 +1,4 @@
+import { SourceController } from "controllers/SourceController";
 import { CreepBase } from "creeps/CreepBase";
 import { CreepChat } from "types/CreepChat";
 import { CreepTask } from "types/CreepTask";
@@ -6,33 +7,26 @@ import { Traveler } from "utils/Traveler";
 import { TravelToOptions } from "utils/TravelerInterfaces";
 import { CreepTaskBase } from "./CreepTask";
 
-export class CreepTaskRepair extends CreepTaskBase {
-    private target: string;
-    private travelOptions: TravelToOptions = {style: {color: '#AAAA00', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
+export class CreepTaskRegen extends CreepTaskBase {
+    private travelOptions: TravelToOptions = {style: {color: '#AA0000', lineStyle: 'dashed', opacity:.5}, ignoreCreeps: true, ignoreRoads: false};
 
-    constructor(struct?: Structure) {
+    constructor() {
         super();
-        if (struct) this.target = struct.id;
     }
 
     public onTick(creep: CreepBase): boolean {
-        const target: any = Game.getObjectById(this.target);
+        const target: StructureSpawn = creep.obj.room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_SPAWN)[0] as StructureSpawn;
         if (!target) {
             creep.obj.say(CreepChat.error, true);
             return true;
         }
 
-        if (target.hitsMax == target.hits || creep.obj.store.getUsedCapacity() == 0) {
+        if (creep.obj.ticksToLive >= 1499) {
             creep.obj.say(CreepChat.done, true);
             return true;
         }
 
-        if ((target.structureType === STRUCTURE_WALL && target.hits > 30000) || (target.structureType === STRUCTURE_RAMPART && target.hits > 50000)) {
-            creep.obj.say(CreepChat.done, true);
-            return true;
-        }
-
-        const did = catchError(() => creep.obj.repair(target));
+        const did = catchError(() => target.renewCreep(creep.obj));
         if (typeof did === 'undefined') {
             creep.obj.say(CreepChat.error, true);
             return true;
@@ -44,18 +38,23 @@ export class CreepTaskRepair extends CreepTaskBase {
                 return true;
             }
 
-            if(did == ERR_NOT_IN_RANGE) {
-                const moveret = Traveler.travelTo(creep.obj, target, this.travelOptions);
-                creep.obj.say(moveret == OK ? CreepChat.moving : CreepChat.tired, true);
+            if(did == ERR_TIRED) {
+                creep.obj.say(CreepChat.tired, true);
                 return false;
             }
 
-            if(did == ERR_NOT_ENOUGH_RESOURCES) {
+            if(did == ERR_FULL) {
                 creep.obj.say(CreepChat.done, true);
                 return true;
             }
 
-            creep.obj.say(`${CreepChat.error}:${did}:Repair`);
+            if(did == ERR_NOT_IN_RANGE || did == ERR_BUSY) {
+                const moveret = Traveler.travelTo(creep.obj, target, this.travelOptions);
+                creep.obj.say(moveret == OK ? CreepChat.moving : CreepChat.tired);
+                return false;
+            }
+
+            creep.obj.say(`${CreepChat.error}:${did}:regen`);
             return false;
         }
 
@@ -64,16 +63,13 @@ export class CreepTaskRepair extends CreepTaskBase {
     }
 
     public serialize(): object {
-        return {
-            target: this.target
-        };
+        return {};
     }
 
     public deserialize(data: any): void {
-        this.target = data.target;
     }
 
     public getType(): CreepTask {
-        return CreepTask.Repair;
+        return CreepTask.Regen;
     }
 }
