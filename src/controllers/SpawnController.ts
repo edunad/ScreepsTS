@@ -64,6 +64,11 @@ slaveBonuses[CreepRole.Builder] = [
             storages: 1,
         },
         body: [CARRY, MOVE],
+    },{
+        req: {
+            containers: 2,
+        },
+        body: [CARRY, MOVE],
     }
 ];
 
@@ -208,6 +213,7 @@ export class SpawnController {
 
         rooms.forEach(roomName => {
             const room = Game.rooms[roomName];
+            if (!room) return;
             const roomReq = this.getRoomReqs(room);
 
             //room.visual.clear();
@@ -258,7 +264,7 @@ export class SpawnController {
 
                 const costNeeded = this.getBuildCost(bodyParts);
                 if (costNeeded > roomReq.spawnerEnergy) {
-                    console.log(`Waiting to spawn ${slave.name}:${costNeeded}, got ${roomReq.spawnerEnergy}`);
+                    //console.log(`Waiting to spawn ${slave.name}:${costNeeded}, got ${roomReq.spawnerEnergy}`);
                     return;
                 }
 

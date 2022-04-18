@@ -7,30 +7,30 @@ export class SourceController {
         return this.sourcesUsed[source.id] >= 1 || (this.sourcesSpace[source.id] < this.sourcesUsed[source.id] + 1);
     }
 
+    public static findWalkableTiles(room: Room, pos: RoomPosition): RoomPosition[] {
+        const ret: RoomPosition[] = [];
+        const terrain = Game.rooms[room.name].getTerrain();
+
+        // TOP ROW
+        if(terrain.get(pos.x - 1, pos.y - 1) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x - 1, pos.y, room.name));
+        if(terrain.get(pos.x, pos.y - 1) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x, pos.y - 1, room.name));
+        if(terrain.get(pos.x + 1, pos.y - 1) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x + 1, pos.y - 1, room.name));
+
+        // MIDDLE ROW
+        if(terrain.get(pos.x - 1, pos.y) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x - 1, pos.y, room.name));
+        if(terrain.get(pos.x + 1, pos.y) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x + 1, pos.y, room.name));
+
+        // BOTTOM ROW
+        if(terrain.get(pos.x - 1, pos.y + 1) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x - 1, pos.y + 1, room.name));
+        if(terrain.get(pos.x, pos.y + 1) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x, pos.y + 1, room.name));
+        if(terrain.get(pos.x + 1, pos.y + 1) !== TERRAIN_MASK_WALL) ret.push(new RoomPosition(pos.x + 1, pos.y + 1, room.name));
+
+        return ret;
+    }
+
     public static addBusy(source: Source) {
         if (typeof this.sourcesUsed[source.id] === 'undefined') {
-            this.sourcesUsed[source.id] = 0;
-
-            const terrain = source.room.getTerrain();
-            const pos = source.pos;
-
-            let maxCreeps = 8;
-
-            // TOP ROW
-            if(terrain.get(pos.x - 1, pos.y - 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-            if(terrain.get(pos.x, pos.y - 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-            if(terrain.get(pos.x + 1, pos.y - 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-
-            // MIDDLE ROW
-            if(terrain.get(pos.x - 1, pos.y) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-            if(terrain.get(pos.x + 1, pos.y) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-
-            // BOTTOM ROW
-            if(terrain.get(pos.x - 1, pos.y + 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-            if(terrain.get(pos.x, pos.y + 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-            if(terrain.get(pos.x + 1, pos.y + 1) === TERRAIN_MASK_WALL) maxCreeps -= 1;
-
-            this.sourcesSpace[source.id] = maxCreeps;
+            this.sourcesSpace[source.id] = this.findWalkableTiles(source.room, source.pos).length;
         }
 
         this.sourcesUsed[source.id]++;

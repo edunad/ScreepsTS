@@ -6,14 +6,21 @@ export class DiamondTemplate {
     public locations: RoomPosition[];
     public roads: RoomPosition[];
 
-    private diamondSize: number = 7;
+    private diamondSize: number = 8;
 
     constructor(room: Room) {
         this.room = room;
     }
 
-    private getSpawnerLocation(): RoomPosition {
-        const structures = this.room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_SPAWN);
+    public getSpawnerLocation(): RoomPosition {
+        let structures = this.room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_SPAWN);
+        structures = _.sortBy(structures, (s: StructureSpawn) => {switch(s.name) {
+            case `Bob's cave`: return 0;
+            case `Mina's cave`: return 1;
+            case `/shrug`: return 2;
+            default: return 3;
+        }});
+
         const spawner = structures[0] as StructureSpawn;
         if (!spawner) {
             // TODO: find actual room spot with more than 5-6 tiles of space in each direction
@@ -50,6 +57,7 @@ export class DiamondTemplate {
 
         if (byRange.length === 0) return null;
         const closest = byRange[0];
+        if (center.getRangeTo(closest) > this.room.controller.level + 1) return null;
 
         // something is already on the road spot
         if (this.room.lookAt(closest.x, closest.y).filter((x) => x.structure || x.constructionSite).length > 0) {
@@ -84,7 +92,7 @@ export class DiamondTemplate {
         let x = 0;
         y = 0;
         for (let i = 0; i < shape.length; i++) {
-            const pos = new RoomPosition(x - val + spawnerPos.x, y - val + spawnerPos.y, this.room.name);
+            const pos = new RoomPosition(x - val + spawnerPos.x + 1, y - val + spawnerPos.y + 1, this.room.name);
             switch (shape[i]) {
                 case '*':
                     if (terrain.get(pos.x, pos.y) === TERRAIN_MASK_WALL) break;
@@ -95,7 +103,7 @@ export class DiamondTemplate {
 
                 case ' ':
                     // filter out corners of the diamond
-                    if (shape[i - 1] !== ' ' && shape[i + 1] !== ' '){
+                    if (shape[i - 1] !== ' ' || shape[i + 1] !== ' '){
                         if (terrain.get(pos.x, pos.y) === TERRAIN_MASK_WALL) break;
                         if (this.room.lookAt(pos.x, pos.y).filter((x) => x.structure || x.constructionSite).length > 0) break;
 

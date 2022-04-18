@@ -14,6 +14,7 @@ export class BuildController {
             if (!this.mapping[roomName]) this.mapping[roomName] = new BuildingTemplate(room);
 
             const template = this.mapping[roomName];
+            template.room = room;
             template.tick();
 
             if (!template.isDone() && template.needsKaren()) {

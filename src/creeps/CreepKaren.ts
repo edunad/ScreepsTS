@@ -57,6 +57,7 @@ export class CreepKaren extends CreepBuilder {
             STRUCTURE_SPAWN,
             STRUCTURE_TOWER,
             STRUCTURE_LAB,
+            STRUCTURE_NUKER,
         ];
 
         var targets = this.obj.room.find(FIND_STRUCTURES);

@@ -1,5 +1,5 @@
 
-import _ from "lodash";
+import _, { map } from "lodash";
 import { CreepBase } from "creeps/CreepBase";
 import { CreepRole } from "types/CreepRole";
 import { CreepBuilder } from "creeps/CreepBuilder";
@@ -37,10 +37,23 @@ export class HiveController {
     public tick(): void {
         for(let name in Memory.creeps) {
             const creep = Game.creeps[name];
-            if(creep && this.creeps.find((x) => x.name == name) == null) {
+            if (!creep) {
+                delete Memory.creeps[name];
+                continue;
+            }
+
+            if(this.creeps.find((x) => x.name == name) == null) {
                 this.registerCreep(creep);
             }
         }
+
+        catchError(() => {
+            this.spawner.checkRespawns();
+        });
+
+        catchError(() => {
+            this.builder.tick();
+        });
 
         for (let i = 0; i < this.creeps.length; i++) {
             const c = this.creeps[i];
@@ -77,14 +90,6 @@ export class HiveController {
                 i--;
             }
         };
-
-        catchError(() => {
-            this.spawner.checkRespawns();
-        });
-
-        catchError(() => {
-            this.builder.tick();
-        });
 
         for (let roomName in Game.rooms) {
             const room = Game.rooms[roomName];
@@ -197,6 +202,8 @@ export class HiveController {
 
         this.creeps = [];
 
+        if (!Memory.rooms) Memory.rooms = {};
+
         for(const name in Game.creeps) {
             this.registerCreep(Game.creeps[name]);
         }
@@ -228,5 +235,12 @@ export class HiveController {
         })
 
         if (!found) console.log('failed :(');
+    }
+
+    public cancelAllTasks() {
+        this.creeps.forEach((c) => {
+            c.setTask(null);
+            console.log('Done: ' + c.name);
+        })
     }
 }

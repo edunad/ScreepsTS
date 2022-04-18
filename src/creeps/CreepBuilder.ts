@@ -31,8 +31,6 @@ export class CreepBuilder extends CreepBase {
     };
 
     private checkNeedsToUpgrade(): boolean {
-        if (this.obj.room.controller.level >= 8) return false;
-
         this.setTask(new CreepTaskTransfer(this.obj.room.controller));
         return true;
     };
