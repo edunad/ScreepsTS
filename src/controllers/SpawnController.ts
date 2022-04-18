@@ -88,7 +88,7 @@ const slaves: CreepSpawnTemplate[] = [
     {name: 'Bobbie', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 3}},
     {name: 'Bobby', role: CreepRole.FighterMelee, body: [TOUGH, ATTACK, ATTACK, MOVE, MOVE, MOVE], req: {enemies: 4}},
 
-    {name: 'Bob', role: CreepRole.Harvester, mem: {sourceIndex: 0}, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2}},
+    {name: 'Bob', role: CreepRole.Harvester, mem: {sourceIndex: 0}, body: [WORK, WORK, CARRY, MOVE], req: {level: 2}},
     {name: 'Rob', role: CreepRole.Harvester, mem: {sourceIndex: 1}, body: [WORK, WORK, CARRY, MOVE], req: {energy: 1, level: 2, sources: 2}},
 
     {name: 'Harry', role: CreepRole.Builder, body: [WORK, CARRY, MOVE], req: {level: 2}},
@@ -119,7 +119,7 @@ const slaves: CreepSpawnTemplate[] = [
     //{name: 'BLOOD FOR THE BLOOD GOD', infinite: true, infiniteNameParts: ['🩸', '🔪', '👿', '🦷', '🪓'], role: CreepRole.Adventurer, body: [MOVE], req: {energy: 1000, extentions: 8, level: 3, flagEnabled: 'WAR'}},
 ]
 
-const rooms: string[] = ['W6N1'];
+const rooms: string[] = ['W6N1', 'W6N2'];
 
 export class SpawnController {
     private y: number = 0;
@@ -164,8 +164,6 @@ export class SpawnController {
             if (!(e instanceof StructureExtension) && !(e instanceof StructureSpawn)) return;
             availSpawner += e.store.getUsedCapacity(RESOURCE_ENERGY);
         });
-
-        room.find(FIND_DROPPED_RESOURCES).forEach((r) => resourcesOnGround += r.amount);
 
         return  {
             sources: room.find(FIND_SOURCES).length,

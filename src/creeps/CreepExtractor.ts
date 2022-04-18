@@ -41,7 +41,6 @@ export class CreepExtractor extends CreepBase {
                 }
             }
         }
-
     }
 
     public onTick(): void {

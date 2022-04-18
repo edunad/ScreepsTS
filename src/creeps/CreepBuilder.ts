@@ -24,7 +24,7 @@ export class CreepBuilder extends CreepBase {
     }
 
     private checkNeedsToFixController(): boolean {
-        if (this.obj.room.controller.ticksToDowngrade >= 5000) return false;
+        if (this.obj.room.controller.ticksToDowngrade >= 7000) return false;
 
         this.setTask(new CreepTaskTransfer(this.obj.room.controller));
         return true;
