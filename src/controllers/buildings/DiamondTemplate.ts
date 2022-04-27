@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { SpawnNames } from "types/SpawnNames";
 
 export class DiamondTemplate {
     public shape: string;
@@ -14,17 +15,12 @@ export class DiamondTemplate {
 
     public getSpawnerLocation(): RoomPosition {
         let structures = this.room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType === STRUCTURE_SPAWN);
-        structures = _.sortBy(structures, (s: StructureSpawn) => {switch(s.name) {
-            case `Bob's cave`: return 0;
-            case `Mina's cave`: return 1;
-            case `/shrug`: return 2;
-            default: return 3;
-        }});
+        structures = _.sortBy(structures, (s: StructureSpawn) => SpawnNames.indexOf(s.name));
 
         const spawner = structures[0] as StructureSpawn;
         if (!spawner) {
             // TODO: find actual room spot with more than 5-6 tiles of space in each direction
-            return new RoomPosition(25, 25, this.room.name);
+            return new RoomPosition(17, 16, this.room.name);
         }
 
         return spawner.pos;
@@ -57,7 +53,7 @@ export class DiamondTemplate {
 
         if (byRange.length === 0) return null;
         const closest = byRange[0];
-        if (center.getRangeTo(closest) > this.room.controller.level + 1) return null;
+        if (center.getRangeTo(closest) > this.room.controller.level*1.5 + 1) return null;
 
         // something is already on the road spot
         if (this.room.lookAt(closest.x, closest.y).filter((x) => x.structure || x.constructionSite).length > 0) {

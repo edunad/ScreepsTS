@@ -4,7 +4,7 @@ import { CreepTaskMove } from "tasks/CreepTaskMove";
 import { CreepRole } from "types/CreepRole";
 import { BuildingTemplate } from "./buildings/BuildingTemplate";
 
-const rooms: string[] = ['W6N2'];
+const rooms: string[] = ['W6N2', 'W8N3'];
 export class BuildController {
     private mapping: {[id: string]: BuildingTemplate} = {};
 

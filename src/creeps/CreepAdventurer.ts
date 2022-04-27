@@ -10,7 +10,8 @@ import { CreepBase } from "./CreepBase";
 //const targetRoom = 'W9N8'; // harry
 //const targetRoom = 'W8N7'; // harry group
 //const targetRoom = 'W6N1'; // brom 1
-const targetRoom = 'W6N2'; // brom 2
+//const targetRoom = 'W6N2'; // brom 2
+const targetRoom = 'W8N3'; // brom 3
 //const targetRoom = 'W6N3'; // center
 //const targetRoom = 'W9N1'; // AI left down corner
 //const targetRoom = 'W1N1'; // AI right down corner
@@ -50,6 +51,7 @@ export class CreepAdventurer extends CreepBase {
             targets = targets.filter((s) => s instanceof Creep || s.structureType != STRUCTURE_CONTROLLER);
         }
 
+        if (targets[0] instanceof StructureController && (this.obj.room.controller?.owner?.username == this.obj.owner.username || this.obj.room.name !== targetRoom)) return [];
         return targets;
     }
 
@@ -59,8 +61,8 @@ export class CreepAdventurer extends CreepBase {
         targets = _.sortBy(targets, s => this.obj.pos.getRangeTo(s))
         if (targets.length > 0) {
             const t = targets[0];
-            if (t instanceof StructureController) {
-                if (t.owner.username !== this.obj.owner.username) {
+            if (t instanceof StructureController && t.room.name === targetRoom) {
+                if (t.owner?.username !== this.obj.owner.username) {
                     if (t.pos.getRangeTo(this.obj.pos.x, this.obj.pos.y) < 2) {
                         this.obj.claimController(t);
                         this.setTask(new CreepTaskSleep(1));
@@ -95,7 +97,7 @@ export class CreepAdventurer extends CreepBase {
                 return;
             }
 
-            this.setTask(new CreepTaskMove(new RoomPosition(25, 25, targetRoom)));
+            this.setTask(new CreepTaskMove(new RoomPosition(17, 16, targetRoom)));
         } else {
             /*if ( this.obj.signController(this.obj.room.controller, 'VOTE BOB FOR PRESIDENT') == OK) {
                 this.setTask(new CreepTaskIdle(10));
@@ -107,7 +109,7 @@ export class CreepAdventurer extends CreepBase {
 
             //this.setTask(new CreepTaskAttackMelee(t));
             //this.setTask(new CreepTaskIdle(10));
-            this.setTask(new CreepTaskMove(new RoomPosition(25, 25, targetRoom)));
+            this.setTask(new CreepTaskMove(new RoomPosition(17, 16, targetRoom)));
         }
     }
 }

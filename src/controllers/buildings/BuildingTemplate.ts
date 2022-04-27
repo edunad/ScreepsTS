@@ -4,6 +4,7 @@ import { CreepRole } from "types/CreepRole";
 import { DiamondTemplate } from "./DiamondTemplate";
 import { SourceController } from "controllers/SourceController";
 import { Traveler } from "utils/Traveler";
+import { SpawnNames } from "types/SpawnNames";
 
 export interface ControllerBuildingsCount {
     containers?: number;
@@ -169,6 +170,7 @@ export class BuildingTemplate {
 
     public tick(): void {
         if (this.room.find(FIND_CONSTRUCTION_SITES).length > 0) return;
+        if (this.room.controller?.owner?.username !== 'Bob') return;
 
         const next = this.getNextBuilding();
         if (!next) {
@@ -228,11 +230,14 @@ export class BuildingTemplate {
             const sources = this.room.find(FIND_SOURCES);
             const numContainers = this.room.find(FIND_MY_STRUCTURES).filter((x) => x instanceof StructureContainer).length;
             const source = sources[numContainers % sources.length];
-            const mineSpots = SourceController.findWalkableTiles(source.room, source.pos);
+            const spawnerPos = this.template.getSpawnerLocation();
+            let mineSpots = SourceController.findWalkableTiles(source.room, source.pos);
+            mineSpots = _.sortBy(mineSpots, (x) => x.getRangeTo(spawnerPos));
 
             let found = false;
             for (let i = 0; i < mineSpots.length; i++) {
-                const places = SourceController.findWalkableTiles(source.room, mineSpots[i]);
+                let places = SourceController.findWalkableTiles(source.room, mineSpots[i]);
+                places = _.sortBy(places, (x) => x.getRangeTo(spawnerPos));
 
                 for (let i = 0; i < places.length; i++) {
                     if (this.room.lookAt(places[i]).filter((l) => (l.structure && l.structure.structureType != STRUCTURE_ROAD) || l.constructionSite).length == 0) {
@@ -274,9 +279,14 @@ export class BuildingTemplate {
         }
 
         if (next === STRUCTURE_SPAWN) {
-            const spawners = this.room.find(FIND_MY_STRUCTURES).filter((x) => x.structureType == STRUCTURE_SPAWN).length;
-            const names = [`Bob's cave`, `Mina's cave`, `/shrug`];
-            this.room.createConstructionSite(spot.x, spot.y, next, names[spawners]);
+            const names = JSON.parse(JSON.stringify(SpawnNames));
+            for (let key in Game.spawns) {
+                const spawn = Game.spawns[key];
+                const startIndex = names.indexOf(spawn.name);
+
+                if (startIndex !== -1) names.splice(startIndex, 1);
+            }
+            this.room.createConstructionSite(spot.x, spot.y, next, names[0]);
         } else {
             this.room.createConstructionSite(spot.x, spot.y, next);
         }

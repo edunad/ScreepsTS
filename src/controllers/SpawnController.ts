@@ -15,6 +15,7 @@ import { CreepChat } from "types/CreepChat";
 interface CreepSpawnTemplateReq {
     energy?: number;
     level?: number;
+    levelLess?: number;
     enemies?: number;
     sources?: number;
     storages?: number;
@@ -82,6 +83,7 @@ slaveBonuses[CreepRole.Karen] = [{
 
 const slaves: CreepSpawnTemplate[] = [
     {name: 'Karen', role: CreepRole.Karen, body: [WORK, CARRY, MOVE]},
+    {name: 'Kuren', role: CreepRole.Karen, body: [WORK, CARRY, MOVE], req: {levelLess: 2, sources: 2}},
     {name: 'Koren', role: CreepRole.Karen, body: [WORK, CARRY, CARRY, MOVE, MOVE], req: {energy: 4500}},
     {name: 'Kiren', role: CreepRole.Karen, body: [WORK, CARRY, CARRY, MOVE, MOVE], req: {extentions: 5}},
 
@@ -124,8 +126,6 @@ const slaves: CreepSpawnTemplate[] = [
     //{name: 'BLOOD FOR THE BLOOD GOD', infinite: true, infiniteNameParts: ['🩸', '🔪', '👿', '🦷', '🪓'], role: CreepRole.Adventurer, body: [MOVE], req: {energy: 1000, extentions: 8, level: 3, flagEnabled: 'WAR'}},
 ]
 
-const rooms: string[] = ['W6N1', 'W6N2'];
-
 export class SpawnController {
     private y: number = 0;
 
@@ -140,6 +140,7 @@ export class SpawnController {
         if (typeof req.extractors !== 'undefined' && roomDetails.extractors < req.extractors) return false;
         if (typeof req.droppedResources !== 'undefined' && roomDetails.droppedResources < req.droppedResources) return false;
         if (typeof req.level !== 'undefined' && req.level > roomDetails.level) return false;
+        if (typeof req.levelLess !== 'undefined' && req.levelLess <= roomDetails.levelLess) return false;
         if (typeof req.enemies !== 'undefined' && req.enemies > roomDetails.enemies) return false;
         if (typeof req.extentions !== 'undefined' && req.extentions > roomDetails.extentions) return false;
         if (typeof req.extentionsLess !== 'undefined' && req.extentionsLess <= roomDetails.extentions) return false;
@@ -174,7 +175,7 @@ export class SpawnController {
             sources: room.find(FIND_SOURCES).length,
             enemies: room.find(FIND_HOSTILE_CREEPS).length + room.find(FIND_HOSTILE_STRUCTURES).length,
             storages: structures.filter((x) => x.structureType == STRUCTURE_STORAGE).length,
-            extractors: structures.filter((x) => x.structureType == STRUCTURE_EXTRACTOR).length,
+            extractors: structures.filter((x) => x instanceof StructureExtractor && x.room.lookAt(x.pos).filter((y) => y.mineral)[0]?.mineral.mineralAmount > 0).length,
             extentions: exts.length,
             energy: energy,
             level: room.controller.level,
@@ -211,9 +212,9 @@ export class SpawnController {
     public checkRespawns(): void {
         this.y = 1;
 
-        rooms.forEach(roomName => {
+        for (let roomName in Game.rooms) {
             const room = Game.rooms[roomName];
-            if (!room) return;
+            if (room?.controller?.owner?.username !== 'Bob') continue;
             const roomReq = this.getRoomReqs(room);
 
             //room.visual.clear();
@@ -253,7 +254,10 @@ export class SpawnController {
                 if (slaveBonuses[slave.role]) {
                     slaveBonuses[slave.role].forEach((x: CreepSpawnTemplate) => {
                         if (this.checkReq(x.req, room, roomReq)) {
-                            bodyParts = bodyParts.concat(x.body);
+                            const newbody = bodyParts.concat(x.body);
+                            if (this.getBuildCost(newbody) > roomReq.spawnerEnergy) return;
+
+                            bodyParts = newbody;
                         }
                     });
                 }
@@ -289,6 +293,6 @@ export class SpawnController {
                         break;
                 }
             });
-        });
+        }
     }
 }
