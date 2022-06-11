@@ -42,6 +42,10 @@ declare global {
         pathsBuild:  {[id: string]: boolean};
     }
 }
+export interface StategicPath {
+    from: RoomPosition;
+    to: RoomPosition[];
+}
 
 export class BuildingTemplate {
     public room: Room;
@@ -168,6 +172,68 @@ export class BuildingTemplate {
         return null;
     }
 
+    private createPath(from: RoomPosition, to: RoomPosition): RoomPosition {
+        const path = Traveler.findTravelPath(from, to, {ignoreCreeps: true, ignoreRoads: true, offRoad: true});
+        let nextRoad: RoomPosition = null;
+        for (let j = 0; j < path.path.length; j++) {
+            const find = this.room.lookAt(path.path[j]).filter((x) => x.structure && !(x.structure instanceof StructureContainer || x.structure instanceof Ruin || x.structure instanceof Tombstone));
+            if (find.length > 0) continue;
+
+            nextRoad = path.path[j];
+            break;
+        }
+
+        return nextRoad;
+    }
+
+
+    private generatePathsFromStategicPoints(): StategicPath[] {
+        if (!this.room.controller) return [];
+
+        const sources = this.room.find(FIND_SOURCES).map((s) => s.pos);
+        const controller = this.room.controller.pos;
+        const minerals = this.room.controller.level > 5 ? this.room.find(FIND_MINERALS).map((m) => m.pos) : [];
+
+        return [
+            {from: this.template.getSpawnerLocation(), to: [].concat(sources, controller, minerals)},
+            {from: controller, to: sources},
+        ];
+    }
+
+    private createNextRoadPiece() {
+        // diamond shape roads around our "town"
+        let nextRoad = this.template.getNextRoad();
+        if (!nextRoad) {
+            // let's check the paths to the minerals and the controller
+            const roads = this.generatePathsFromStategicPoints();
+            for (let ri = 0; ri < roads.length && !nextRoad; ri++) {
+                const curRoad = roads[ri];
+
+                for (let i = 0; i < curRoad.to.length; i++) {
+                    const endpoint = curRoad.to[i];
+                    const endpointName = `${curRoad.from.x}_${curRoad.from.y}:${endpoint.x}_${endpoint.y}`;
+                    let mem = Memory.rooms[this.room.name];
+                    if (mem && mem.pathsBuild && mem.pathsBuild[endpointName]) continue;
+
+                    nextRoad = this.createPath(this.template.getSpawnerLocation(), endpoint);
+
+                    if (!nextRoad) {
+                        if (!mem) mem = Memory.rooms[this.room.name] = {avoid: 0, pathsBuild: {}};
+                        if (!mem.pathsBuild) mem.pathsBuild = {};
+                        mem.pathsBuild[endpointName] = true;
+                        console.log("Path created to ", endpoint.x, endpoint.y);
+                    }
+
+                    break;
+                }
+            }
+
+            if (!nextRoad) return;
+        }
+
+        this.room.createConstructionSite(nextRoad.x, nextRoad.y, STRUCTURE_ROAD);
+    }
+
     public tick(): void {
         if (this.room.find(FIND_CONSTRUCTION_SITES).length > 0) return;
         if (this.room.controller?.owner?.username !== 'Bob') return;
@@ -176,46 +242,7 @@ export class BuildingTemplate {
         if (!next) {
             if (this.room.controller.level < 2) return;
 
-            let nextRoad = this.template.getNextRoad();
-            if (!nextRoad) {
-                // ok so all normal diamond roads are made, let's check the paths to the minerals and the controller
-
-                const endpoints: RoomPosition[] = [].concat(
-                    this.room.find(FIND_SOURCES).map((s) => s.pos),
-                    this.room.controller.pos,
-                    this.room.controller.level > 5 ? this.room.find(FIND_MINERALS).map((m) => m.pos) : [],
-                );
-
-                for (let i = 0; i < endpoints.length; i++) {
-                    const endpointName = `${endpoints[i].x}_${endpoints[i].y}`;
-                    let mem = Memory.rooms[this.room.name];
-                    if (mem && mem.pathsBuild && mem.pathsBuild[endpointName]) continue;
-
-                    const path = Traveler.findTravelPath(this.template.getSpawnerLocation(), endpoints[i], {ignoreCreeps: true, ignoreRoads: true, offRoad: true});
-                    let done = true;
-                    for (let j = 0; j < path.path.length; j++) {
-                        const find = this.room.lookAt(path.path[j]).filter((x) => x.structure && !(x.structure instanceof StructureContainer || x.structure instanceof Ruin || x.structure instanceof Tombstone));
-                        if (find.length > 0) continue;
-
-                        nextRoad = path.path[j];
-                        done = false;
-                        break;
-                    }
-
-                    if (done) {
-                        if (!mem) mem = Memory.rooms[this.room.name] = {avoid: 0, pathsBuild: {}};
-                        if (!mem.pathsBuild) mem.pathsBuild = {};
-                        mem.pathsBuild[endpointName] = true;
-                        console.log("Path created to ", endpoints[i].x, endpoints[i].y);
-                    }
-
-                    break;
-                }
-
-                if (!nextRoad) return;
-            }
-
-            this.room.createConstructionSite(nextRoad.x, nextRoad.y, STRUCTURE_ROAD);
+            this.createNextRoadPiece();
             return;
         }
 

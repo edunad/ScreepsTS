@@ -7,7 +7,7 @@ export class DiamondTemplate {
     public locations: RoomPosition[];
     public roads: RoomPosition[];
 
-    private diamondSize: number = 8;
+    private diamondSize: number = 10;
 
     constructor(room: Room) {
         this.room = room;
